@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_webrtc: ^0.9.47 # 프로젝트 시점의 안정적인 최신 버전 확인 후 사용
+  flutter_webrtc: ^0.11.6+hotfix.1 # 프로젝트 시점의 안정적인 최신 버전 확인 후 사용
   web_socket_channel: ^2.4.0
   uuid: ^4.3.3 # 고유 사용자 ID 생성을 위함
   # The following adds the Cupertino Icons font to your application.
