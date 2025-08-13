@@ -116,16 +116,14 @@ class WebRTCManager {
     final pc = await createPeerConnection(configuration);
 
     pc.onIceCandidate = (candidate) {
-      if (candidate != null) {
-        sendSignal({
-          'type': 'ice-candidate',
-          'sender': _selfId,
-          'receiver': peerId,
-          'room': roomId,
-          'data': candidate.toMap(),
-        });
-      }
-    };
+      sendSignal({
+        'type': 'ice-candidate',
+        'sender': _selfId,
+        'receiver': peerId,
+        'room': roomId,
+        'data': candidate.toMap(),
+      });
+        };
 
     pc.onTrack = (event) {
       if (event.streams.isNotEmpty) {

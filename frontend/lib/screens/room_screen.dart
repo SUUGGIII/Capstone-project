@@ -8,7 +8,7 @@ import 'package:asdf/services/webrtc_manager.dart';
 
 class RoomScreen extends StatefulWidget {
   final String roomId;
-  const RoomScreen({Key? key, required this.roomId}) : super(key: key);
+  const RoomScreen({super.key, required this.roomId});
 
   @override
   _RoomScreenState createState() => _RoomScreenState();
