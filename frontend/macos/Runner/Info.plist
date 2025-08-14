@@ -28,5 +28,11 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSMicrophoneUsageDescription</key>
+    <string>Please give us access to your microphone to enable audio chats.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Please give us access to your camera to enable video chats.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Please give us access to your screen to enable screen sharing.</string>
 </dict>
 </plist>

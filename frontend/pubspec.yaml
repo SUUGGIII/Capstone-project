@@ -1,4 +1,4 @@
-name: asdf
+name: meeting_app
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -30,12 +30,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_webrtc: ^0.11.6+hotfix.1 # 프로젝트 시점의 안정적인 최신 버전 확인 후 사용
-  web_socket_channel: ^2.4.0
-  uuid: ^4.3.3 # 고유 사용자 ID 생성을 위함
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  intl: ^0.18.0 #날짜 및 시간
+  flutter_webrtc: any
+  web_socket_channel: ^2.4.0
+  uuid: ^4.3.3 # 고유 사용자 ID 생성을 위함
+  provider: ^6.1.2 # Provider 패키지 추가
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +61,12 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/zoom_logo.png #메인 화면용(아이콘)
+    #- assets/hi_hand.png #(team_chat_page.dart용)
+    #- assets/scheduler_preview.png #(scheduler_page.dart용)
+    #- assets/profile_pic1.png #(documents_page.dart용)
+    #- assets/profile_pic2.png #(documents_page.dart용)
 
   # To add assets to your application, add an assets section, like this:
   # assets:
