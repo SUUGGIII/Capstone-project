@@ -1,4 +1,3 @@
-// room_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:uuid/uuid.dart';
@@ -18,7 +17,7 @@ class _RoomScreenState extends State<RoomScreen> {
   final SignalingService _signaling = SignalingService();
   late final WebRTCManager _webRTCManager;
   final String _selfId = const Uuid().v4();
-  
+
   final List<String> _participants = [];
   final Map<String, MediaStream> _remoteStreams = {};
   final Map<String, RTCVideoRenderer> _audioRenderers = {};
@@ -172,7 +171,6 @@ class _RoomScreenState extends State<RoomScreen> {
       appBar: AppBar(title: Text('Room: ${widget.roomId}')),
       body: Column(
         children: [
-          // 로컬 및 원격 화면 공유 뷰
           if (_isScreenSharing || _remoteScreenRenderers.isNotEmpty)
             SizedBox(
               height: 200,
@@ -188,7 +186,6 @@ class _RoomScreenState extends State<RoomScreen> {
               ),
             ),
           const Divider(),
-          // 참가자 목록
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text('Participants (${_participants.length + 1})', style: Theme.of(context).textTheme.titleMedium),
@@ -213,7 +210,6 @@ class _RoomScreenState extends State<RoomScreen> {
               },
             ),
           ),
-          // 오디오 렌더러 (UI에 보이지 않음)
           SizedBox(
             width: 0,
             height: 0,

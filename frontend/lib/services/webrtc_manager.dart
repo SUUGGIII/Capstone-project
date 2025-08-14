@@ -1,15 +1,13 @@
-// webrtc_manager.dart
 import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class WebRTCManager {
   final Map<String, RTCPeerConnection> _peerConnections = {};
   MediaStream? _localStream;
-  MediaStream? _screenStream; // 화면 공유 스트림
+  MediaStream? _screenStream;
   final String _selfId;
   final Function(Map<String, dynamic> message) sendSignal;
 
-  // 콜백 함수들
   final Function(String peerId, MediaStream stream) onAddRemoteStream;
   final Function(String peerId) onRemoveRemoteStream;
   final Function(MediaStream stream) onAddLocalScreenStream;
@@ -65,7 +63,6 @@ class WebRTCManager {
     if (_screenStream == null) return;
 
     try {
-      // 스트림 트랙부터 중지
       for (var track in _screenStream!.getTracks()) {
         await track.stop();
       }
@@ -73,16 +70,15 @@ class WebRTCManager {
       _screenStream = null;
       onRemoveLocalScreenStream();
 
-      // 피어 연결에서 트랙 제거 및 재협상
       for (var peerId in _peerConnections.keys) {
-          var pc = _peerConnections[peerId]!;
-          var senders = await pc.getSenders();
-          for (var sender in senders) {
-            if (sender.track?.kind == 'video') {
-              await pc.removeTrack(sender);
-            }
+        var pc = _peerConnections[peerId]!;
+        var senders = await pc.getSenders();
+        for (var sender in senders) {
+          if (sender.track?.kind == 'video') {
+            await pc.removeTrack(sender);
           }
-          await _renegotiate(pc, peerId);
+        }
+        await _renegotiate(pc, peerId);
       }
     } catch (e) {
       print('Error stopping screen share: $e');
@@ -98,7 +94,7 @@ class WebRTCManager {
         'type': 'offer',
         'sender': _selfId,
         'receiver': peerId,
-        'room': 'some_room_id', // room ID를 동적으로 관리해야 함
+        'room': 'some_room_id',
         'data': offer.toMap()
       });
     } catch (e) {
@@ -133,8 +129,8 @@ class WebRTCManager {
     }
 
     pc.onRenegotiationNeeded = () async {
-       print("Renegotiation needed for $peerId");
-       await _renegotiate(pc, peerId);
+      print("Renegotiation needed for $peerId");
+      await _renegotiate(pc, peerId);
     };
 
     await pc.setRemoteDescription(RTCSessionDescription(sdp['sdp'], sdp['type']));
@@ -236,7 +232,7 @@ class WebRTCManager {
         onAddRemoteScreenStream(peerId, stream);
       }
     };
-    
+
     pc.onConnectionState = (state) {
       print('Connection state for $peerId: $state');
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected ||

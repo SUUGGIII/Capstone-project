@@ -41,31 +41,31 @@ class _ScreenSelectDialogState extends State<ScreenSelectDialog> {
       content: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                itemCount: _sources.length,
-                itemBuilder: (context, index) {
-                  final source = _sources[index];
-                  return ListTile(
-                    title: Text(source.name),
-                    leading: Radio<DesktopCapturerSource>(
-                      value: source,
-                      groupValue: _selectedSource,
-                      onChanged: (DesktopCapturerSource? value) {
-                        setState(() {
-                          _selectedSource = value;
-                        });
-                      },
-                    ),
-                    onTap: () {
-                       setState(() {
-                          _selectedSource = source;
-                        });
-                    },
-                  );
+        width: double.maxFinite,
+        child: ListView.builder(
+          itemCount: _sources.length,
+          itemBuilder: (context, index) {
+            final source = _sources[index];
+            return ListTile(
+              title: Text(source.name),
+              leading: Radio<DesktopCapturerSource>(
+                value: source,
+                groupValue: _selectedSource,
+                onChanged: (DesktopCapturerSource? value) {
+                  setState(() {
+                    _selectedSource = value;
+                  });
                 },
               ),
-            ),
+              onTap: () {
+                setState(() {
+                  _selectedSource = source;
+                });
+              },
+            );
+          },
+        ),
+      ),
       actions: <Widget>[
         TextButton(
           child: const Text('Cancel'),
