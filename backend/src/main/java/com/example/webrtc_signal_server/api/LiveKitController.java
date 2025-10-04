@@ -2,7 +2,6 @@ package com.example.webrtc_signal_server.api;
 
 import com.example.webrtc_signal_server.domain.livekit.dto.LiveKitRequestDTO;
 import com.example.webrtc_signal_server.domain.livekit.service.LiveKitService;
-import com.example.webrtc_signal_server.domain.user.dto.UserRequestDTO;
 import livekit.LivekitModels;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 
 @RestController
