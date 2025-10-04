@@ -44,6 +44,9 @@ dependencies {
 
     //oauth2
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    //livekit
+    implementation 'io.livekit:livekit-server:0.10.1'
 }
 
 tasks.named('test') {
