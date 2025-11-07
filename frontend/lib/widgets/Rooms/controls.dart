@@ -1,3 +1,16 @@
+// 기능: 화상 회의 중 미디어 제어(마이크/카메라 켜고 끄기, 화면 공유, 연결 종료 등) 및 테스트 시나리오 시뮬레이션을 위한 컨트롤 위젯을 제공함.
+// 호출: ScreenSelectDialog를 호출하여 화면 공유 소스를 선택하고, livekit_client 패키지의 Room 및 LocalParticipant 객체 메소드를 호출하여 미디어 상태를 제어함. flutter_background 및 flutter_webrtc 관련 함수를 호출함.
+// 호출됨: 주로 room.dart 또는 room_screen.dart와 같은 화상 회의 화면에서 ControlsWidget 형태로 호출되어 사용됨.
+
+// 하단 컨트롤 버튼 기능 (왼쪽부터 순서대로):
+// 1. 마이크 제어: 자신의 마이크를 켜거나 끔. (데스크톱에서는 입력 장치 선택 메뉴 포함)
+// 2. 오디오 출력 선택: 소리를 출력할 스피커 장치를 선택함. (데스크톱 전용)
+// 3. 스피커폰 전환: 스피커폰 모드를 켜거나 끔. (모바일 전용)
+// 4. 카메라 제어: 자신의 카메라를 켜거나 끔. (데스크톱에서는 입력 장치 선택 메뉴 포함)
+// 5. 화면 공유: 화면 공유를 시작하거나 중지함.
+// 6. 연결 끊기: 화상회의 방에서 나감.
+// 7. 테스트 메뉴: 미디어 전송 중단, 데이터 전송, 구독 권한 설정, 시나리오 시뮬레이션 등의 테스트 기능을 제공함.
+// 8. 사이드바 토글: AI 어시스턴트 사이드바를 열거나 닫음.
 import 'dart:async';
 import 'dart:convert';
 
@@ -5,26 +18,29 @@ import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background/flutter_background.dart';
-import 'package:livekit_client/livekit_client.dart';
+import 'package:livekit_client/livekit_client.dart' hide ScreenSelectDialog;
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:meeting_app/pages/exts.dart';
+import 'package:meeting_app/utils/exts.dart';
+
+import 'screen_select_dialog.dart';
 
 
 class ControlsWidget extends StatefulWidget {
   //
   final Room room;
   final LocalParticipant participant;
+  final void Function()? onToggleSidebar;
 
   const ControlsWidget(
     this.room,
     this.participant, {
+    this.onToggleSidebar,
     super.key,
   });
 
   @override
   State<StatefulWidget> createState() => _ControlsWidgetState();
 }
-
 class _ControlsWidgetState extends State<ControlsWidget> {
   //
   CameraPosition position = CameraPosition.front;
@@ -113,21 +129,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
     setState(() {});
   }
 
-  void _toggleCamera() async {
-    final track = participant.videoTrackPublications.firstOrNull?.track;
-    if (track == null) return;
 
-    try {
-      final newPosition = position.switched();
-      await track.setCameraPosition(newPosition);
-      setState(() {
-        position = newPosition;
-      });
-    } catch (error) {
-      print('could not restart track: $error');
-      return;
-    }
-  }
 
   void _enableScreenShare() async {
     if (lkPlatformIsDesktop()) {
@@ -285,11 +287,6 @@ class _ControlsWidgetState extends State<ControlsWidget> {
         spacing: 5,
         runSpacing: 5,
         children: [
-          IconButton(
-            onPressed: _unpublishAll,
-            icon: const Icon(Icons.cancel),
-            tooltip: 'Unpublish all',
-          ),
           if (participant.isMicrophoneEnabled())
             if (lkPlatformIs(PlatformType.android))
               IconButton(
@@ -434,13 +431,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
               icon: const Icon(Icons.videocam_off),
               tooltip: 'un-mute video',
             ),
-          IconButton(
-            icon: Icon(position == CameraPosition.back
-                ? Icons.video_camera_back
-                : Icons.video_camera_front),
-            onPressed: () => _toggleCamera(),
-            tooltip: 'toggle camera',
-          ),
+
           if (participant.isScreenShareEnabled())
             IconButton(
               icon: const Icon(Icons.monitor_outlined),
@@ -458,20 +449,33 @@ class _ControlsWidgetState extends State<ControlsWidget> {
             icon: const Icon(Icons.close_sharp),
             tooltip: 'disconnect',
           ),
-          IconButton(
-            onPressed: _onTapSendData,
-            icon: const Icon(Icons.message),
-            tooltip: 'send demo data',
+          PopupMenuButton<Function>(
+            icon: const Icon(Icons.bug_report), // Using bug_report for test menu
+            tooltip: 'Test Menu',
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<Function>>[
+              PopupMenuItem(
+                child: const Text('Unpublish all'),
+                value: _unpublishAll,
+              ),
+              PopupMenuItem(
+                child: const Text('Send demo data'),
+                value: _onTapSendData,
+              ),
+              PopupMenuItem(
+                child: const Text('Subscribe permission'),
+                value: _onTapUpdateSubscribePermission,
+              ),
+              PopupMenuItem(
+                child: const Text('Simulate scenario'),
+                value: _onTapSimulateScenario,
+              ),
+            ],
+            onSelected: (value) => value(),
           ),
           IconButton(
-            onPressed: _onTapUpdateSubscribePermission,
-            icon: const Icon(Icons.settings),
-            tooltip: 'Subscribe permission',
-          ),
-          IconButton(
-            onPressed: _onTapSimulateScenario,
-            icon: const Icon(Icons.bug_report),
-            tooltip: 'Simulate scenario',
+            onPressed: widget.onToggleSidebar,
+            icon: const Icon(Icons.view_sidebar),
+            tooltip: 'Toggle Sidebar',
           ),
         ],
       ),

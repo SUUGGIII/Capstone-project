@@ -1,36 +1,87 @@
 PODS:
-  - flutter_webrtc (1.0.0):
+  - connectivity_plus (0.0.1):
     - FlutterMacOS
-    - WebRTC-SDK (= 137.7151.02)
+  - desktop_webview_window (0.0.1):
+    - FlutterMacOS
+  - device_info_plus (0.0.1):
+    - FlutterMacOS
+  - flutter_web_auth_2 (3.0.0):
+    - FlutterMacOS
+  - flutter_webrtc (1.2.0):
+    - FlutterMacOS
+    - WebRTC-SDK (= 137.7151.04)
   - FlutterMacOS (1.0.0)
+  - livekit_client (2.5.0):
+    - flutter_webrtc
+    - FlutterMacOS
+    - WebRTC-SDK (= 137.7151.04)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - WebRTC-SDK (137.7151.02)
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - url_launcher_macos (0.0.1):
+    - FlutterMacOS
+  - WebRTC-SDK (137.7151.04)
+  - window_to_front (0.0.1):
+    - FlutterMacOS
 
 DEPENDENCIES:
+  - connectivity_plus (from `Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos`)
+  - desktop_webview_window (from `Flutter/ephemeral/.symlinks/plugins/desktop_webview_window/macos`)
+  - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
+  - flutter_web_auth_2 (from `Flutter/ephemeral/.symlinks/plugins/flutter_web_auth_2/macos`)
   - flutter_webrtc (from `Flutter/ephemeral/.symlinks/plugins/flutter_webrtc/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - livekit_client (from `Flutter/ephemeral/.symlinks/plugins/livekit_client/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
+  - window_to_front (from `Flutter/ephemeral/.symlinks/plugins/window_to_front/macos`)
 
 SPEC REPOS:
   trunk:
     - WebRTC-SDK
 
 EXTERNAL SOURCES:
+  connectivity_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos
+  desktop_webview_window:
+    :path: Flutter/ephemeral/.symlinks/plugins/desktop_webview_window/macos
+  device_info_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos
+  flutter_web_auth_2:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_web_auth_2/macos
   flutter_webrtc:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_webrtc/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
+  livekit_client:
+    :path: Flutter/ephemeral/.symlinks/plugins/livekit_client/macos
   path_provider_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
+  shared_preferences_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
+  url_launcher_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
+  window_to_front:
+    :path: Flutter/ephemeral/.symlinks/plugins/window_to_front/macos
 
 SPEC CHECKSUMS:
-  flutter_webrtc: 0d70bd8782c19bde286dc52f766eebbea26de201
-  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
-  WebRTC-SDK: d20de357dcbf7c9696b124b39f3ff62125107e4b
+  connectivity_plus: 0a976dfd033b59192912fa3c6c7b54aab5093802
+  desktop_webview_window: d4365e71bcd4e1aa0c14cf0377aa24db0c16a7e2
+  device_info_plus: 1b14eed9bf95428983aed283a8d51cce3d8c4215
+  flutter_web_auth_2: 2e1dc2d2139973e4723c5286ce247dd590390d70
+  flutter_webrtc: f3000fcd54abc3fa966c77ecf7e43ab701793c64
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  livekit_client: 002947eea2e2998aa9956081867ea3d185fb75c3
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+  url_launcher_macos: c82c93949963e55b228a30115bd219499a6fe404
+  WebRTC-SDK: 40d4f5ba05cadff14e4db5614aec402a633f007e
+  window_to_front: 4cdc24ddd8461ad1a55fa06286d6a79d8b29e8d8
 
-PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
+PODFILE CHECKSUM: 090ca4f3014aa46c8e12d65c486eadd4ccdd0118
 
 COCOAPODS: 1.16.2

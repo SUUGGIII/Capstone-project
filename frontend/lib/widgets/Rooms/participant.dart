@@ -1,7 +1,11 @@
+// 기능: 화상 회의의 개별 참가자(로컬 또는 원격)의 비디오 및 오디오 상태를 시각적으로 표현하는 위젯을 구현함. 참가자의 비디오, 이름, 마이크 상태, 연결 품질, 통계 등을 표시하며, 화면 공유 여부에 따라 다른 UI를 제공함.
+// 호출: NoVideoWidget, ParticipantInfoWidget, ParticipantStatsWidget, SoundWaveformWidget 등 여러 자식 위젯들을 조합하여 참가자 화면을 구성함. RemoteTrackPublicationMenuWidget, RemoteTrackFPSMenuWidget, RemoteTrackQualityMenuWidget을 호출하여 원격 참가자의 트랙 구독 및 품질 설정을 위한 메뉴를 제공함. livekit_client 패키지의 Participant, VideoTrack, AudioTrack 등의 객체와 메소드를 사용하여 참가자 및 트랙 정보를 관리함.
+// 호출됨: room.dart 파일에서 ParticipantWidget.widgetFor 팩토리 메소드를 통해 각 참가자 트랙에 해당하는 위젯 형태로 호출되어 사용됨.
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
-import 'package:meeting_app/pages/theme.dart';
+import 'package:meeting_app/theme/theme.dart';
+
 
 import 'no_video.dart';
 import 'participant_info.dart';
@@ -124,16 +128,8 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
 
   @override
   Widget build(BuildContext ctx) => Container(
-        foregroundDecoration: BoxDecoration(
-          border: widget.participant.isSpeaking && !isScreenShare
-              ? Border.all(
-                  width: 5,
-                  color: LKColors.lkBlue,
-                )
-              : null,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(ctx).cardColor,
+        decoration: const BoxDecoration(
+          color: Colors.white,
         ),
         child: Stack(
           children: [
@@ -142,12 +138,13 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
               onTap: () => setState(() => _visible = !_visible),
               child: activeVideoTrack != null && !activeVideoTrack!.muted
                   ? VideoTrackRenderer(
-                      renderMode: VideoRenderMode.auto,
                       activeVideoTrack!,
+                      fit: VideoViewFit.cover,
+                      mirrorMode: VideoViewMirrorMode.mirror,
                     )
                   : const NoVideoWidget(),
             ),
-            // Bottom bar
+            // Bottom bar4
             Align(
               alignment: Alignment.bottomCenter,
               child: Column(

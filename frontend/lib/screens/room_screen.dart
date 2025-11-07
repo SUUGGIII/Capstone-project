@@ -1,9 +1,12 @@
+// 기능: WebRTC 기술을 사용하여 오디오/비디오 채팅 및 화면 공유 기능을 제공하는 화상 회의 방 화면을 구현함. 참가자 관리, 로컬/원격 스트림 처리, 마이크/화면 공유 제어 등의 기능을 포함함. (LiveKit SDK를 사용하는 room.dart와는 다른, 수동 시그널링 기반의 구현 방식임.)
+// 호출: SignalingService를 사용하여 시그널링 서버와 통신하고, WebRTCManager를 사용하여 WebRTC 연결 및 미디어 스트림을 관리함. ScreenSelectDialog를 호출하여 화면 공유 소스를 선택함. flutter_webrtc 패키지의 RTCVideoRenderer 및 MediaStream 관련 클래스를 사용하여 비디오 렌더링 및 스트림 처리를 담당함.
+// 호출됨: home_screen.dart 파일에서 Room ID와 함께 RoomScreen 위젯 형태로 호출되어 사용됨.
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:uuid/uuid.dart';
 import '../services/signaling_service.dart';
 import '../services/webrtc_manager.dart';
-import '../widgets/screen_select_dialog.dart';
+import 'package:meeting_app/widgets/Rooms/screen_select_dialog.dart';
 
 class RoomScreen extends StatefulWidget {
   final String roomId;

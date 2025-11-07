@@ -1,7 +1,11 @@
+// 기능: 회의 관련 주요 기능을 제공하는 페이지를 구현함. "새 회의", "참가", "예약" 버튼을 통해 각각 회의 생성, 회의 참여, 회의 예약 기능으로 연결됨. 예정된 회의 목록을 표시하는 영역을 포함함.
+// 호출: create_room.dart의 CreateRoomPage를 호출하여 새 회의 생성 화면으로 이동함. home_screen.dart의 HomeScreen을 호출하여 회의 참여 화면으로 이동함. NavigationProvider를 통해 SchedulerPage로 전환하도록 요청함.
+// 호출됨: home_page.dart 파일에서 MeetingPage 위젯 형태로 호출되어 메인 화면의 탭 중 하나로 사용됨.
 import 'package:flutter/material.dart';
-import '../screens/home_screen.dart';
+import 'package:meeting_app/pages/Rooms/create_room.dart';
 import '../providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
+import '../screens/home_screen.dart';
 
 class MeetingPage extends StatelessWidget {
   const MeetingPage({super.key});
@@ -34,7 +38,7 @@ class MeetingPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    MaterialPageRoute(builder: (context) => const CreateRoomPage()),
                   );
                 },
               ),
@@ -46,7 +50,7 @@ class MeetingPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
                   );
                 },
               ),
@@ -58,13 +62,6 @@ class MeetingPage extends StatelessWidget {
                 onPressed: () {
                   navProvider.setSelectedIndex(3);
                 },
-              ),
-              const SizedBox(width: 24),
-              _buildMeetingActionButton(
-                icon: Icons.screen_share,
-                label: '화면 공유',
-                color: Colors.purple,
-                onPressed: () {},
               ),
             ],
           ),
