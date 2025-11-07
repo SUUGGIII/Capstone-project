@@ -1,3 +1,6 @@
+// 기능: 사용자 로그인 기능을 제공하는 페이지를 구현함. 이메일/비밀번호 기반의 자체 로그인과 Naver, Google 등 소셜 로그인 기능을 지원함. 로그인 성공 시 사용자 인증 토큰을 저장하고 메인 페이지로 이동함.
+// 호출: home_page.dart의 HomePage를 호출하여 로그인 성공 시 메인 화면으로 이동함. http 패키지를 사용하여 백엔드 API와 통신하여 로그인 및 토큰 갱신을 처리함. shared_preferences를 사용하여 인증 토큰을 저장함. url_launcher를 사용하여 소셜 로그인 시 외부 브라우저를 실행함.
+// 호출됨: main.dart 파일에서 앱의 초기 화면으로 LoginPage 위젯 형태로 호출됨.
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -32,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
@@ -41,20 +44,20 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Image.asset('assets/zoom_logo.png', height: 50),
               const SizedBox(height: 12),
-              const Text(
-                'Workplace',
+              Text(
+                'MeetingApp',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'us05web.zoom.us',
+              Text(
+                '캡스톤디자인 1',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
               const SizedBox(height: 40),
@@ -66,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                    icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
                     onPressed: () {},
                     tooltip: '뒤로',
                   ),
@@ -77,14 +80,6 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _usernameController,
                 decoration: InputDecoration(
                   hintText: '이메일 또는 전화번호',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
                 ),
                 style: const TextStyle(color: Colors.black87),
               ),
@@ -94,14 +89,6 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true, // 비밀번호를 가리는 속성
                 decoration: InputDecoration(
                   hintText: '비밀번호',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
                 ),
                 style: const TextStyle(color: Colors.black87),
               ),
@@ -134,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(55),
-                  backgroundColor: Colors.blue[600],
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
                   ),
@@ -199,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: Text(
                   '계정이 없으신가요? 가입',
                   style: TextStyle(
-                    color: Colors.blue[600],
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -213,7 +200,7 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {},
                     child: Text(
                       '약관',
-                      style: TextStyle(color: Colors.blue[600], fontSize: 13),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13),
                     ),
                   ),
                   Text(
@@ -224,7 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {},
                     child: Text(
                       '개인정보 보호',
-                      style: TextStyle(color: Colors.blue[600], fontSize: 13),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13),
                     ),
                   ),
                 ],

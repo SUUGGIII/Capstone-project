@@ -1,3 +1,6 @@
+// 기능: "Zoom Scheduler" 기능의 주요 장점을 사용자에게 홍보하고, 14일 무료 체험, 구매, 자세히 알아보기 등의 액션을 유도하는 마케팅 페이지를 구현함.
+// 호출: flutter/material.dart의 다양한 기본 위젯(ElevatedButton, TextButton 등)을 사용하여 UI를 구성함. 현재는 다른 커스텀 위젯이나 파일을 직접 호출하지 않음.
+// 호출됨: home_page.dart 파일에서 SchedulerPage 위젯 형태로 호출되어 메인 화면의 탭 중 하나로 사용되거나, meeting_page.dart에서 "예약" 버튼 클릭 시 NavigationProvider를 통해 전환될 것으로 추정됨.
 import 'package:flutter/material.dart';
 
 class SchedulerPage extends StatelessWidget {
