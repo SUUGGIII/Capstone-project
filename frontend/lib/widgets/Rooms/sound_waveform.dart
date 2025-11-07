@@ -38,6 +38,9 @@
  * SOFTWARE.
  */
 
+// 기능: LiveKit의 AudioTrack에서 전달되는 오디오 레벨을 시각적인 파형(Waveform)으로 실시간 표시하는 위젯을 구현함. 오디오 레벨에 따라 막대(bar)의 높이가 동적으로 변하는 애니메이션 효과를 제공함.
+// 호출: livekit_client 패키지의 createVisualizer, AudioVisualizer, AudioVisualizerOptions, AudioVisualizerEvent 등을 사용하여 오디오 데이터를 시각화함. flutter/material.dart의 AnimatedContainer, Row 등 기본 위젯과 AnimationController를 사용하여 파형 애니메이션을 구현함.
+// 호출됨: participant.dart 파일에서 ParticipantWidget 내부에서 참가자의 오디오 트랙이 활성화되고 음성이 감지될 때 SoundWaveformWidget 형태로 호출되어 시각적 피드백을 제공함.
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 

@@ -1,3 +1,6 @@
+// 기능: WebRTC 통신을 위한 핵심 로직을 관리하는 클래스를 구현함. PeerConnection 생성 및 관리, Offer/Answer/ICE Candidate 교환, 로컬/원격 미디어 스트림 및 화면 공유 스트림 처리, 마이크 및 원격 오디오 제어 등의 복잡한 WebRTC 동작을 캡슐화함.
+// 호출: flutter_webrtc 라이브러리의 navigator.mediaDevices, createPeerConnection, RTCSessionDescription, RTCIceCandidate 등 다양한 WebRTC API를 직접 호출하여 미디어 장치 접근, PeerConnection 설정, SDP 및 ICE Candidate 처리를 수행함. sendSignal 콜백을 통해 SignalingService로 시그널링 메시지를 전송함.
+// 호출됨: room_screen.dart 파일에서 WebRTCManager 인스턴스를 생성하고 initializeLocalStream, shareScreen, stopShareScreen, createOffer, handleOffer, handleAnswer, handleIceCandidate, closePeerConnection, toggleMicrophone, toggleRemoteAudio, dispose 등의 메소드를 호출하여 WebRTC 통신을 총괄함.
 import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 

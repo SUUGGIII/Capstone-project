@@ -1,10 +1,13 @@
+// 기능: 화상 회의 참여 전 사용자가 오디오/비디오 장치를 선택하고 자신의 모습을 미리 볼 수 있는 대기 화면을 제공함. LiveKit 서버에 연결하여 회의에 참여하는 기능을 수행함.
+// 호출: room.dart의 RoomPage를 호출하여 실제 회의 화면으로 전환함. livekit_client 패키지의 Hardware, LocalAudioTrack, LocalVideoTrack, Room 등의 클래스와 메소드를 사용하여 장치 관리 및 룸 연결을 처리함. utils/exts.dart의 확장 함수들을 사용하여 다이얼로그를 표시함.
+// 호출됨: MeetingPage 또는 다른 회의 시작 지점에서 PreJoinPage 위젯 형태로 호출될 것으로 추정됨.
 import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
-import 'package:meeting_app/pages/exts.dart';
+import 'package:meeting_app/utils/exts.dart';
 
 import 'room.dart';
 
@@ -61,7 +64,13 @@ class _PreJoinPageState extends State<PreJoinPage> {
     super.initState();
     _subscription =
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
-    Hardware.instance.enumerateDevices().then(_loadDevices);
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _loadDevices();
+    await _setEnableVideo(_enableVideo);
+    await _setEnableAudio(_enableAudio);
   }
 
   @override
@@ -70,50 +79,47 @@ class _PreJoinPageState extends State<PreJoinPage> {
     super.deactivate();
   }
 
-  void _loadDevices(List<MediaDevice> devices) async {
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    _audioTrack?.stop();
+    _videoTrack?.stop();
+    super.dispose();
+  }
+
+  Future<void> _loadDevices([List<MediaDevice>? devices]) async {
+    devices ??= await Hardware.instance.enumerateDevices();
     _audioInputs = devices.where((d) => d.kind == 'audioinput').toList();
     _videoInputs = devices.where((d) => d.kind == 'videoinput').toList();
 
-    if (_audioInputs.isNotEmpty) {
-      if (_selectedAudioDevice == null) {
-        _selectedAudioDevice = _audioInputs.first;
-        Future.delayed(const Duration(milliseconds: 100), () async {
-          await _changeLocalAudioTrack();
-          setState(() {});
-        });
-      }
+    if (_audioInputs.isNotEmpty && _selectedAudioDevice == null) {
+      _selectedAudioDevice = _audioInputs.first;
     }
 
-    if (_videoInputs.isNotEmpty) {
-      if (_selectedVideoDevice == null) {
-        _selectedVideoDevice = _videoInputs.first;
-        Future.delayed(const Duration(milliseconds: 100), () async {
-          await _changeLocalVideoTrack();
-          setState(() {});
-        });
-      }
+    if (_videoInputs.isNotEmpty && _selectedVideoDevice == null) {
+      _selectedVideoDevice = _videoInputs.first;
     }
     setState(() {});
   }
 
-  Future<void> _setEnableVideo(value) async {
+  Future<void> _setEnableVideo(bool value) async {
     _enableVideo = value;
-    if (!_enableVideo) {
+    if (_enableVideo) {
+      await _changeLocalVideoTrack();
+    } else {
       await _videoTrack?.stop();
       _videoTrack = null;
-    } else {
-      await _changeLocalVideoTrack();
     }
     setState(() {});
   }
 
-  Future<void> _setEnableAudio(value) async {
+  Future<void> _setEnableAudio(bool value) async {
     _enableAudio = value;
-    if (!_enableAudio) {
+    if (_enableAudio) {
+      await _changeLocalAudioTrack();
+    } else {
       await _audioTrack?.stop();
       _audioTrack = null;
-    } else {
-      await _changeLocalAudioTrack();
     }
     setState(() {});
   }
@@ -124,13 +130,21 @@ class _PreJoinPageState extends State<PreJoinPage> {
       _audioTrack = null;
     }
 
-    if (_selectedAudioDevice != null) {
-      _audioTrack = await LocalAudioTrack.create(
-        AudioCaptureOptions(
-          deviceId: _selectedAudioDevice!.deviceId,
-        ),
-      );
-      await _audioTrack!.start();
+    if (_selectedAudioDevice != null && _enableAudio) {
+      try {
+        _audioTrack = await LocalAudioTrack.create(
+          AudioCaptureOptions(
+            deviceId: _selectedAudioDevice!.deviceId,
+          ),
+        );
+        await _audioTrack!.start();
+      } catch (e) {
+        print('Could not create audio track: $e');
+        if (mounted) {
+          context.showErrorDialog(e);
+        }
+        _enableAudio = false;
+      }
     }
   }
 
@@ -140,20 +154,22 @@ class _PreJoinPageState extends State<PreJoinPage> {
       _videoTrack = null;
     }
 
-    if (_selectedVideoDevice != null) {
-      _videoTrack =
-          await LocalVideoTrack.createCameraTrack(CameraCaptureOptions(
-        deviceId: _selectedVideoDevice!.deviceId,
-        params: _selectedVideoParameters,
-      ));
-      await _videoTrack!.start();
+    if (_selectedVideoDevice != null && _enableVideo) {
+      try {
+        _videoTrack =
+            await LocalVideoTrack.createCameraTrack(CameraCaptureOptions(
+          deviceId: _selectedVideoDevice!.deviceId,
+          params: _selectedVideoParameters,
+        ));
+        await _videoTrack!.start();
+      } catch (e) {
+        print('Could not create video track: $e');
+        if (mounted) {
+          context.showErrorDialog(e);
+        }
+        _enableVideo = false;
+      }
     }
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
   }
 
   _join(BuildContext context) async {
@@ -285,8 +301,8 @@ class _PreJoinPageState extends State<PreJoinPage> {
                               color: Colors.black54,
                               child: _videoTrack != null
                                   ? VideoTrackRenderer(
-                                      renderMode: VideoRenderMode.auto,
                                       _videoTrack!,
+                                      mirrorMode: VideoViewMirrorMode.mirror,
                                     )
                                   : Container(
                                       alignment: Alignment.center,
