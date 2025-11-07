@@ -1,5 +1,7 @@
 package com.example.webrtc_signal_server.domain.user.entity;
 
+import com.example.webrtc_signal_server.domain.session.entity.PollVoteEntity;
+import com.example.webrtc_signal_server.domain.session.entity.SessionParticipantEntity;
 import com.example.webrtc_signal_server.domain.user.dto.UserRequestDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,10 +13,12 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class) //엔티티의 변화를 감지하여 자동으로 생성일과 수정일 업데이트 이떄 config 필요
-@Table(name="user_user_entity")
+@Table(name="users")
 @Getter
 @Builder
 @NoArgsConstructor
@@ -23,6 +27,7 @@ public class UserEntity {
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     @Column(name = "username", unique = true, nullable = false, updatable = false)
@@ -59,8 +64,27 @@ public class UserEntity {
     @Column(name = "updated_date")
     private LocalDateTime updatedDate;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<SessionParticipantEntity> sessionParticipants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<PollVoteEntity> pollVotes = new ArrayList<>();
+
+
     public void updateUser(UserRequestDTO dto) {
         this.email = dto.getEmail();
         this.nickname = dto.getNickname();
+    }
+
+    //연관관계편의 메소드(sessionParticipants)
+    public void addSessionParticipant(SessionParticipantEntity sessionParticipant) {
+        this.sessionParticipants.add(sessionParticipant);
+        sessionParticipant.associateUser(this);
+    }
+
+    //연관관계편의 메소드(pollVotes)
+    public void addPollVote(PollVoteEntity pollVote) {
+        this.pollVotes.add(pollVote);
+        pollVote.associateUser(this);
     }
 }

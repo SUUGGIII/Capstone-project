@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "jwt_refresh_entity")
+@Table(name = "refresh_token")
 @Getter
 @Builder
 @NoArgsConstructor
