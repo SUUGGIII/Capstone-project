@@ -1,8 +1,14 @@
-// 기능: Room ID를 입력받아 특정 화상 회의 방에 참여하는 기능을 제공하는 화면을 구현함. (현재 앱의 주된 흐름에서는 MeetingPage에서 "참가" 버튼 클릭 시 호출되지만, PreJoinPage를 거치지 않고 바로 RoomScreen으로 이동하는 방식이므로, PreJoinPage를 사용하는 create_room.dart와는 다른 흐름으로 보임.)
-// 호출: room_screen.dart의 RoomScreen을 호출하여 입력된 Room ID로 회의 화면으로 이동함.
-// 호출됨: meeting_page.dart 파일에서 "참가" 버튼 클릭 시 HomeScreen 위젯 형태로 호출됨.
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:meeting_app/screens/room_screen.dart';
+import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+// TODO: Replace with a proper token generation from your backend.
+// This is a placeholder for demonstration purposes.
+const String livekitUrl = 'ws://59.187.251.201:7880';
+const String token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzU2ODk2MDAsImlzcyI6IkFQSVRzVjQ3MTRoTDRzQSIsIm5iZiI6MTcwNDU4NTYwMCwic3ViIjoidXNlci1pZCIsInZpZGVvIjp7InJvb20iOiJ0ZXN0LXJvb20iLCJyb29tSm9pbiI6dHJ1ZSwiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZX19.O5h_3h3v5h3j3h3v5h3j3h3v5h3j3h3v5h3j3h3v5h3';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _roomIdController = TextEditingController();
+  bool _busy = false;
 
   @override
   void dispose() {
@@ -20,14 +27,98 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _joinRoom() {
-    if (_roomIdController.text.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomScreen(roomId: _roomIdController.text),
-        ),
+  Future<void> _showErrorDialog(String message) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(message),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('확인'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _joinRoom() async {
+    if (_roomIdController.text.isEmpty) {
+      await _showErrorDialog('방 ID를 입력해주세요.');
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final accessToken = prefs.getString('accessToken');
+
+      if (accessToken == null) {
+        await _showErrorDialog('로그인이 필요합니다.');
+        // Optionally, navigate to the login page.
+        return;
+      }
+
+      print('Using accessToken: $accessToken'); // Debug print
+
+      final userId = const Uuid().v4();
+      final response = await http.post(
+        Uri.parse('http://localhost:8080/token'), // Using the backend URL from login_page.dart
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode(<String, String>{
+          'roomName': _roomIdController.text,
+          'identity': userId,
+        }),
       );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final livekitToken = data['token'];
+        final livekitUrl = data['url'];
+
+        if (livekitToken != null && livekitUrl != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => RoomScreen(
+                roomId: _roomIdController.text,
+                token: livekitToken,
+                livekitUrl: livekitUrl,
+              ),
+            ),
+          );
+        } else {
+          await _showErrorDialog('응답에서 LiveKit 토큰(token) 또는 URL(url)을 찾을 수 없습니다.');
+        }
+      } else {
+        await _showErrorDialog(
+          '토큰 요청 실패: HTTP ${response.statusCode}\n서버 응답: ${response.body}',
+        );
+      }
+    } catch (e) {
+      await _showErrorDialog('토큰 요청 중 오류 발생: $e');
+    } finally {
+      setState(() {
+        _busy = false;
+      });
     }
   }
 
@@ -35,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WebRTC Audio Chat'),
+        title: const Text('LiveKit Room'),
       ),
       body: Center(
         child: Padding(
@@ -51,10 +142,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _joinRoom,
-                child: const Text('Join Room'),
-              ),
+              _busy
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _joinRoom,
+                      child: const Text('Join Room'),
+                    ),
             ],
           ),
         ),
