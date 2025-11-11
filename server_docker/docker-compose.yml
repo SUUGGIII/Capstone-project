@@ -1,0 +1,17 @@
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: livekit-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "7880:7880/tcp"                # HTTP/WS
+      - "7881:7881/tcp"                # RTC TCP
+      - "55000-59999:55000-59999/udp"  # RTP/ICE UDP
+    volumes:
+      - ./livekit.yaml:/etc/livekit/livekit.yaml:ro
+      - livekit_data:/var/lib/livekit   # <- service 내부에서는 여기까지만
+
+volumes:
+  livekit_data:                          # <- 최상위에 "한 번"만

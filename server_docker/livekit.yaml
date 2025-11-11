@@ -1,0 +1,14 @@
+port: 6000
+log_level: info
+
+rtc:
+  tcp_port: 7884
+  port_range_start: 15000
+  port_range_end: 19000
+  use_external_ip: true
+
+keys:
+  APIkEQMxN9xfjFA: PAFdhq8qqWagmmiuPMj00rZO8IzwcOi3jGpV3JN3fKH
+
+room:
+  auto_create: true

@@ -1,0 +1,18 @@
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: livekit-server
+    restart: unless-stopped
+    env_file:
+    volumes:
+      - ./livekit.yaml:/etc/livekit/livekit.yaml:ro
+      - livekit_data:/var/lib/livekit
+      - .env
+    ports:
+      - "7880:7880/tcp"                # HTTP/WS
+      - "7881:7881/tcp"                # RTC TCP
+      - "50000-60000:50000-60000/udp"  # RTP/ICE UDP
+    volumes:
+      - livekit_data:/var/lib/livekit
+volumes:
+  livekit_data:
