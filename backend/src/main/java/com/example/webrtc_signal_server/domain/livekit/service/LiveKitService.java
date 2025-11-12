@@ -10,6 +10,12 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class LiveKitService {
@@ -18,12 +24,29 @@ public class LiveKitService {
     public EgressServiceClient egressServiceClient;
     public AccessToken accessToken;
 
+    @Value("${cloud.aws.credentials.access-key}")
+    private String accessKey;
+
+    @Value("${cloud.aws.credentials.secret-key}")
+    private String secretKey;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
+
+    @Value("${cloud.aws.region.static}")
+    private String region;
+
+
+    private static final long INTERVAL_MINUTES = 5;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private volatile LivekitEgress.EgressInfo currentEgressInfo = null;
+
     public LiveKitService(RoomServiceClient roomServiceClient, EgressServiceClient egressServiceClient, AccessToken accessToken) {
         this.roomServiceClient = roomServiceClient;
         this.egressServiceClient = egressServiceClient;
         this.accessToken = accessToken;
     }
-
     /**
      * LiveKit 서버에 새 방을 생성하고 방 정보를 반환합니다.
      */
@@ -53,30 +76,77 @@ public class LiveKitService {
         // 4. JWT 문자열로 서명하고 변환
         return accessToken.toJwt();
     }
-    // 트랙 Egress 시작 API 호출 시뮬레이션
-//    public Call<LivekitEgress.EgressInfo> startTrackEgress(
-//            String roomName,
-//            LivekitEgress.DirectFileOutput fileOutput,
-//            String trackId) {
-//
-//        System.out.println("\n--- MOCK API CALL SENT ---");
-//        System.out.println("Action: Start Track Egress");
-//        System.out.println("Room: " + roomName);
-//        System.out.println("Track ID: " + trackId);
-//        System.out.println("Output Path: " + fileOutput.filepath);
-//        // Simulate a successful API response
-//        return new LivekitEgress.Call<LivekitEgress.EgressInfo>() {
-//            @Override
-//            public LivekitEgress.Response<LivekitEgress.EgressInfo> execute() throws IOException {
-//                try {
-//                    // 네트워크 지연 시뮬레이션
-//                    TimeUnit.MILLISECONDS.sleep(500);
-//                } catch (InterruptedException e) {
-//                    Thread.currentThread().interrupt();
-//                    throw new IOException("API call interrupted", e);
-//                }
-//                return new LivekitEgress.Response<>(new LivekitEgress.EgressInfo());
-//            }
-//        };
+
+    public void startService(String roomName, String Identity) {
+        Runnable periodicTask = () -> {
+            try {
+                // 1. 이전 Egress 세션 중지
+                if (currentEgressInfo != null) {
+                    egressServiceClient.stopEgress(currentEgressInfo.getEgressId()).execute();
+                }
+                LivekitEgress.EgressInfo newInfo = startS3Egress(roomName, Identity);
+                if (newInfo != null) {
+                    currentEgressInfo = newInfo;
+                }
+            } catch (IOException e) {
+                System.err.println("Egress cycle failed due to network/API error: " + e.getMessage());
+                // 오류 발생 시 현재 Egress 상태를 초기화하여 다음 시도에서 재시작을 시도하도록 할 수 있습니다.
+                currentEgressInfo = null;
+            }
+        };
+
+        // 서비스 시작 시 첫 호출을 즉시 실행하고, 이후 5분 간격으로 반복 실행합니다.
+        // initialDelay: 30 (즉시 시작), period: INTERVAL_MINUTES (5분 간격), unit: TimeUnit.MINUTES
+        this.scheduler.scheduleAtFixedRate(
+                periodicTask,
+                30,
+                INTERVAL_MINUTES * 60,
+                TimeUnit.SECONDS
+        );
+    }
+    private String getParticipants(String roomName, String identity) throws IOException {
+        Call<List<LivekitModels.ParticipantInfo>> listCall = roomServiceClient.listParticipants(roomName);
+        Optional<LivekitModels.ParticipantInfo> targetParticipant = listCall.execute().body().stream().filter(p -> p.getIdentity().equals(identity)).findFirst();
+        if (!targetParticipant.isPresent()) {
+            System.out.println("Participant " + identity + " not found in room " + roomName);
+            return null;
+        }
+        List<LivekitModels.TrackInfo> tracks = targetParticipant.get().getTracksList();
+        return tracks.get(0).getSid();
+    }
+
+    private final AtomicInteger egressCounter = new AtomicInteger(0);
+    private LivekitEgress.EgressInfo startS3Egress(String roomName, String identity) throws IOException {
+        int counter = egressCounter.getAndIncrement();
+        String filePath = String.format("%s/%s/%s.wav", roomName, identity, counter); //0.ogg 순차 증가
+        LivekitEgress.DirectFileOutput fileOutput = LivekitEgress.DirectFileOutput.newBuilder().
+                setFilepath(filePath).
+                setS3(LivekitEgress.S3Upload.newBuilder()
+                        .setAccessKey(accessKey)
+                        .setSecret(secretKey)
+                        .setBucket(bucket)
+                        .setRegion(region)
+                        .setForcePathStyle(true)).
+                build();
+        String trackId = getParticipants(roomName, identity);
+        if (trackId == null) {
+            return null;
+        } else {
+            Call<LivekitEgress.EgressInfo> call = egressServiceClient.startTrackEgress(
+                    roomName,
+                    fileOutput,
+                    trackId);
+            Response<LivekitEgress.EgressInfo> response = call.execute();
+            return response.body();
+        }
+    }
+//    public LivekitEgress.EgressInfo startWebsocketEgress(LiveKitRequestDTO dto) throws IOException {
+//        Call<LivekitEgress.EgressInfo> call = egressServiceClient.startTrackEgress(
+//                dto.getRoomName(),
+//                "",
+//                dto.getIdentity());
+//        Response<LivekitEgress.EgressInfo> response = call.execute();
+//        LivekitEgress.EgressInfo egressInfo = response.body();
+//        return egressInfo;
 //    }
 }
