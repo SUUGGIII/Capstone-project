@@ -1,3 +1,6 @@
+// 기능: 앱의 메인 화면을 구성하며, 로그인 후 사용자에게 다양한 기능(회의, 팀 채팅, 일정, 문서, 친구, 더보기)에 접근할 수 있는 UI를 제공함. 상단 내비게이션 바와 좌측 사이드바를 통해 페이지 전환 및 새 회의 생성 기능을 제공함.
+// 호출: HomeTabPage, MeetingPage, TeamChatPage, SchedulerPage, DocumentsPage, FriendsPage, MorePage 등 여러 페이지 위젯을 IndexedStack 내에서 관리하며 표시함. CreateRoomPage를 호출하여 새 회의 생성 화면으로 이동함. NavigationProvider를 사용하여 내비게이션 상태를 관리함.
+// 호출됨: main.dart 파일에서 LoginPage를 통해 로그인 성공 시 HomePage 위젯 형태로 호출되어 앱의 초기 화면으로 사용됨.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:meeting_app/providers/navigation_provider.dart';
@@ -8,19 +11,30 @@ import 'package:meeting_app/pages/scheduler_page.dart';
 import 'package:meeting_app/pages/documents_page.dart';
 import 'package:meeting_app/pages/friends_page.dart';
 import 'package:meeting_app/pages/more_page.dart';
-
+import 'package:meeting_app/pages/Rooms/create_room.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  static final Map<String, Widget> _pages = {
-    '홈': const HomeTabPage(),
-    '회의': const MeetingPage(),
-    '팀 채팅': const TeamChatPage(),
-    '스케줄러': const SchedulerPage(),
-    '문서': const DocumentsPage(),
-    '친구': const FriendsPage(),
-    '더보기': const MorePage(),
+  // IndexedStack에서 네비게이션에 사용할 모든 뷰
+  static final List<Widget> _allViews = [
+    const HomeTabPage(),      // index 0
+    const MeetingPage(),      // index 1
+    const TeamChatPage(),     // index 2
+    const SchedulerPage(),    // index 3
+    const DocumentsPage(),    // index 4
+    const FriendsPage(),      // index 5
+    const MorePage(),         // index 6
+  ];
+
+  // 상단 네비게이션 바에 표시될 페이지, 레이블을 _allViews의 인덱스에 매핑
+  static final Map<String, int> _navItems = {
+    '회의': 1,
+    '팀 채팅': 2,
+    '일정': 3,
+    '문서': 4,
+    '친구': 5,
+    '더보기': 6,
   };
 
   @override
@@ -29,21 +43,24 @@ class HomePage extends StatelessWidget {
       builder: (context, navProvider, child) {
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
             elevation: 0.5,
-            title: Row(
-              children: [
-                Image.asset('assets/zoom_logo.png', height: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Workplace',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            title: GestureDetector(
+              onTap: () => navProvider.setSelectedIndex(0), // HomeTabPage로 네비게이션
+              child: Row(
+                children: [
+                  Image.asset('assets/zoom_logo.png', height: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    'MeetingApp',
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.titleLarge?.color,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             actions: [
               IconButton(
@@ -52,10 +69,8 @@ class HomePage extends StatelessWidget {
                 tooltip: '검색',
               ),
               const SizedBox(width: 16),
-              ..._pages.entries.toList().asMap().entries.map((entry) {
-                int index = entry.key;
-                String label = entry.value.key;
-                return _buildNavigationItem(label, index, navProvider);
+              ..._navItems.entries.map((entry) {
+                return _buildNavigationItem(entry.key, entry.value, navProvider);
               }).toList(),
               const SizedBox(width: 16),
               Stack(
@@ -114,7 +129,7 @@ class HomePage extends StatelessWidget {
                       label: '새 회의',
                       iconColor: Colors.orange,
                       backgroundColor: Colors.orange[100],
-                      onPressed: () => navProvider.setSelectedIndex(1),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateRoomPage())),
                     ),
                     const SizedBox(height: 16),
                     _buildSidebarButton(
@@ -122,7 +137,7 @@ class HomePage extends StatelessWidget {
                       label: '참가',
                       iconColor: Colors.blue,
                       backgroundColor: Colors.blue[100],
-                      onPressed: () => navProvider.setSelectedIndex(1),
+                      onPressed: () => navProvider.setSelectedIndex(1), // MeetingPage로 이동
                     ),
                     const SizedBox(height: 16),
                     _buildSidebarButton(
@@ -130,16 +145,9 @@ class HomePage extends StatelessWidget {
                       label: '예약',
                       iconColor: Colors.blue,
                       backgroundColor: Colors.blue[100],
-                      onPressed: () => navProvider.setSelectedIndex(3),
+                      onPressed: () => navProvider.setSelectedIndex(3), // SchedulerPage로 이동
                     ),
                     const SizedBox(height: 16),
-                    _buildSidebarButton(
-                      icon: Icons.arrow_upward,
-                      label: '화면 공유',
-                      iconColor: Colors.blue,
-                      backgroundColor: Colors.blue[100],
-                      onPressed: () {},
-                    ),
                     const Spacer(),
                   ],
                 ),
@@ -147,7 +155,7 @@ class HomePage extends StatelessWidget {
               Expanded(
                 child: IndexedStack(
                   index: navProvider.selectedIndex,
-                  children: _pages.values.toList(),
+                  children: _allViews,
                 ),
               ),
             ],

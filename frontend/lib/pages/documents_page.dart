@@ -1,3 +1,6 @@
+// 기능: 회의 관련 문서들을 관리하고 표시하는 페이지를 구현함. 문서 검색, 필터링, 최근 문서, 내 문서, 공유 문서 등 다양한 카테고리별 문서 탐색 기능을 제공하며, 개별 문서 항목을 시각적으로 구성함.
+// 호출: flutter/material.dart의 다양한 기본 위젯(TextField, ListTile, DropdownButton, Card 등)을 사용하여 UI를 구성함. 다른 커스텀 위젯이나 파일을 직접 호출하지 않음.
+// 호출됨: home_page.dart 파일에서 DocumentsPage 위젯 형태로 호출되어 메인 화면의 탭 중 하나로 사용됨.
 import 'package:flutter/material.dart';
 
 class DocumentsPage extends StatelessWidget {

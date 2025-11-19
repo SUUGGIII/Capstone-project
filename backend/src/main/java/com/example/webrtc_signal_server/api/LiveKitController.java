@@ -22,27 +22,16 @@ public class LiveKitController {
     public LiveKitController(LiveKitService liveKitService) {
         this.liveKitService = liveKitService;
     }
-
-    /**
-     * LiveKit 서버에 새 방을 생성합니다.
-     */
-    @PostMapping(value = "/livekit/createRoom", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<LivekitModels.Room> createRoom(@Validated(LiveKitRequestDTO.roomGroup.class) @RequestBody LiveKitRequestDTO dto) {
-        try {
-            LivekitModels.Room room = liveKitService.createRoom(dto.getRoomName());
-            return ResponseEntity.ok(room);
-        } catch (IOException e) {
-            // 예외 발생 시 500 Internal Server Error 반환
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
     /**
      * 클라이언트가 방에 접속할 수 있도록 액세스 토큰(JWT)을 생성합니다.
      * 이 토큰은 클라이언트 SDK가 LiveKit 서버에 연결할 때 사용됩니다.
      */
     @PostMapping(value = "/livekit/token", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> createJoinToken(@Validated(LiveKitRequestDTO.tokenGroup.class) @RequestBody LiveKitRequestDTO dto) {
+    public ResponseEntity<Map<String, String>> createJoinToken(@Validated(LiveKitRequestDTO.tokenGroup.class) @RequestBody LiveKitRequestDTO dto)  throws IOException {
+
+        LivekitModels.Room room = liveKitService.createRoom(dto.getRoomName());
+
+        liveKitService.startService(dto.getRoomName(), dto.getIdentity());
         // 서비스 레이어를 통해 토큰 생성 로직을 호출합니다.
         String token = liveKitService.createLiveKitToken(dto);
 

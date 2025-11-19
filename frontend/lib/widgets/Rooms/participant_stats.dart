@@ -1,3 +1,6 @@
+// 기능: LiveKit 화상 회의 참가자의 실시간 WebRTC 통계(오디오/비디오 비트레이트, 코덱, 프레임률, 패킷 손실 등)를 표시하는 디버깅 및 모니터링용 위젯을 구현함.
+// 호출: livekit_client 패키지의 Participant, Track, EventsListener, VideoSenderStatsEvent, AudioSenderStatsEvent 등 다양한 클래스와 이벤트를 사용하여 참가자의 미디어 트랙 통계 정보를 수집하고 처리함. flutter/material.dart의 Column, Text 등 기본 위젯을 사용하여 통계 정보를 UI에 표시함.
+// 호출됨: participant.dart 파일에서 ParticipantWidget 내부에서 showStatsLayer가 활성화될 경우 ParticipantStatsWidget 형태로 호출되어 사용됨.
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 

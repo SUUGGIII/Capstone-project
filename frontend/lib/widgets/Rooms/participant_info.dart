@@ -1,3 +1,6 @@
+// 기능: 화상 회의 참가자의 이름, 마이크 상태, 연결 품질, 화면 공유 여부, E2EE(종단 간 암호화) 활성화 여부 등 핵심 정보를 표시하는 위젯을 구현함.
+// 호출: flutter/material.dart의 Row, Text, Icon 등 기본 위젯을 사용하여 정보를 시각적으로 구성함. livekit_client 패키지의 ConnectionQuality enum을 사용하여 연결 품질에 따른 아이콘을 표시함.
+// 호출됨: participant.dart 파일에서 ParticipantInfoWidget 형태로 호출되어 각 참가자 비디오 화면 하단에 정보 오버레이로 사용됨.
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 

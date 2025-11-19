@@ -26,6 +26,7 @@ dependencies {
     //-------------------------------------------------------new-------------------------------------------------------
     //h2 Database 사용
     runtimeOnly 'com.h2database:h2'
+    //runtimeOnly 'com.mysql:mysql-connector-j'
 
     //JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -47,6 +48,9 @@ dependencies {
 
     //livekit
     implementation 'io.livekit:livekit-server:0.10.1'
+
+    //s3
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 }
 
 tasks.named('test') {

@@ -1,15 +1,19 @@
+// 기능: 실제 화상 회의가 진행되는 메인 화면을 구성함. 참가자들의 비디오 트랙을 표시하고, 발언자 순으로 정렬하며, 미디어 컨트롤 및 AI 어시스턴트 사이드바를 통합하여 제공함. LiveKit 룸 이벤트 리스너를 설정하고 관리함.
+// 호출: ParticipantWidget을 호출하여 각 참가자의 화면을 렌더링하고, ControlsWidget을 하단에 포함하여 미디어 제어를 담당함. AiAssistantSidebar를 호출하여 AI 어시스턴트 기능을 제공함. livekit_client 패키지의 Room 및 LocalParticipant 객체 메소드를 사용하여 룸 상태 및 참가자 미디어를 관리함. utils/exts.dart 및 utils/utils.dart의 확장 함수들을 사용함.
+// 호출됨: prejoin.dart 파일에서 LiveKit 룸 연결 성공 시 RoomPage 위젯 형태로 호출되어 사용됨.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
-import 'package:meeting_app/pages/exts.dart';
-import 'package:meeting_app/pages/participant.dart';
-import 'package:meeting_app/pages/participant_info.dart';
-import 'package:meeting_app/pages/utils.dart';
+import 'package:meeting_app/utils/exts.dart';
+import 'package:meeting_app/widgets/Rooms/participant.dart';
+import 'package:meeting_app/widgets/Rooms/participant_info.dart';
+import 'package:meeting_app/utils/utils.dart';
 
-import 'controls.dart';
+import '../../widgets/Rooms/controls.dart';
+import '../../widgets/Rooms/AI_sidebar/ai_assistant_sidebar.dart';
 
 
 class RoomPage extends StatefulWidget {
@@ -219,43 +223,70 @@ class _RoomPageState extends State<RoomPage> {
     });
   }
 
+  int _getCrossAxisCount() {
+    if (participantTracks.length == 1) {
+      return 1;
+    }
+    if (participantTracks.length <= 4) {
+      return 2;
+    } else if (participantTracks.length <= 9) {
+      return 3;
+    }
+    return 4;
+  }
+
+  bool _isSidebarVisible = false;
+
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarVisible = !_isSidebarVisible;
+    });
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Stack(
-          children: [
-            Column(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Column(
               children: [
                 Expanded(
-                    child: participantTracks.isNotEmpty
-                        ? ParticipantWidget.widgetFor(participantTracks.first,
-                            showStatsLayer: true)
-                        : Container()),
+                  child: participantTracks.isNotEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: GridView.builder(
+                            itemCount: participantTracks.length,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: _getCrossAxisCount(),
+                              childAspectRatio: 16 / 9,
+                            ),
+                            itemBuilder: (BuildContext context, int index) {
+                              return ParticipantWidget.widgetFor(
+                                  participantTracks[index]);
+                            },
+                          ),
+                        )
+                      : Container(),
+                ),
                 if (widget.room.localParticipant != null)
                   SafeArea(
                     top: false,
                     child: ControlsWidget(
-                        widget.room, widget.room.localParticipant!),
-                  )
-              ],
-            ),
-            Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                child: SizedBox(
-                  height: 120,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: math.max(0, participantTracks.length - 1),
-                    itemBuilder: (BuildContext context, int index) => SizedBox(
-                      width: 180,
-                      height: 120,
-                      child: ParticipantWidget.widgetFor(
-                          participantTracks[index + 1]),
+                      widget.room,
+                      widget.room.localParticipant!,
+                      onToggleSidebar: _toggleSidebar,
                     ),
                   ),
-                )),
-          ],
-        ),
-      );
+              ],
+            ),
+          ),
+          if (_isSidebarVisible)
+            const AiAssistantSidebar(),
+        ],
+      ),
+    );
+  }
 }

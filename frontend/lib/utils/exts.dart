@@ -1,3 +1,6 @@
+// 기능: BuildContext에 대한 확장(Extension) 메소드를 정의하여, 앱 전반에서 사용되는 다양한 공통 다이얼로그(예: 확인, 에러, 정보, 시뮬레이션 시나리오 선택 등)를 간편하게 표시할 수 있는 유틸리티 기능을 제공함.
+// 호출: flutter/material.dart의 showDialog, AlertDialog, SimpleDialog 등 기본 다이얼로그 관련 위젯 및 함수를 호출하여 실제 다이얼로그 UI를 구성하고 표시함.
+// 호출됨: room.dart, prejoin.dart, create_room.dart, webrtc_manager.dart 등 앱의 다양한 페이지 및 서비스 로직에서 BuildContext 객체를 통해 확장 메소드 형태로 호출되어 사용자에게 알림, 확인, 선택 등의 상호작용을 제공함.
 import 'package:flutter/material.dart';
 
 extension LKExampleExt on BuildContext {

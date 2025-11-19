@@ -1,3 +1,6 @@
+// 기능: 앱의 전반적인 시각적 스타일을 정의함. 색상, 글꼴, 위젯 테마 등을 설정함. LiveKitTheme 클래스를 통해 ThemeData 객체를 빌드하여 앱 전체에 일관된 디자인을 적용하는 데 사용됨.
+// 호출: google_fonts 패키지를 사용하여 글꼴을 가져오고, flutter/material.dart의 다양한 위젯 및 테마 관련 클래스를 사용함. 직접적으로 다른 커스텀 위젯이나 페이지를 호출하지는 않음.
+// 호출됨: main.dart 파일에서 MaterialApp의 theme 속성에 LiveKitTheme().buildThemeData(context) 형태로 호출되어 앱의 전역 테마를 설정함.
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -15,14 +18,14 @@ extension LKColors on Colors {
 
 class LiveKitTheme {
   //
-  final bgColor = Colors.black;
-  final textColor = Colors.white;
+  final bgColor = Colors.white;
+  final textColor = Colors.black;
   final cardColor = LKColors.lkDarkBlue;
-  final accentColor = LKColors.lkBlue;
+  final accentColor = Colors.blue[600];
 
   ThemeData buildThemeData(BuildContext ctx) => ThemeData(
         appBarTheme: AppBarTheme(
-          backgroundColor: cardColor,
+          backgroundColor: Colors.white,
         ),
         cardColor: cardColor,
         scaffoldBackgroundColor: bgColor,
@@ -44,7 +47,7 @@ class LiveKitTheme {
             // backgroundColor: WidgetStateProperty.all<Color>(accentColor),
             backgroundColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.disabled)) {
-                return accentColor.withValues(alpha: 0.5);
+                return accentColor?.withAlpha(128) ?? Colors.transparent;
               }
               return accentColor;
             }),
@@ -59,7 +62,7 @@ class LiveKitTheme {
             if (states.contains(WidgetState.selected)) {
               return accentColor;
             }
-            return accentColor.withValues(alpha: 0.3);
+            return accentColor?.withAlpha(77) ?? Colors.transparent;
           }),
           thumbColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
@@ -69,7 +72,7 @@ class LiveKitTheme {
           }),
         ),
         dialogTheme: DialogThemeData(
-          backgroundColor: cardColor,
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
