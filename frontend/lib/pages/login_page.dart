@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../home_page.dart';
+import 'signup_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
@@ -182,7 +183,12 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 40),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SignUpPage()),
+                  );
+                },
                 child: Text(
                   '계정이 없으신가요? 가입',
                   style: TextStyle(
