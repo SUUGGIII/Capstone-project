@@ -162,6 +162,8 @@ class _RoomPageState extends State<RoomPage> {
   void _sortParticipants() {
     List<ParticipantTrack> userMediaTracks = [];
     List<ParticipantTrack> screenTracks = [];
+    final participantsWithUserMedia = <Participant>{};
+
     for (var participant in widget.room.remoteParticipants.values) {
       for (var t in participant.videoTrackPublications) {
         if (t.isScreenShare) {
@@ -171,9 +173,17 @@ class _RoomPageState extends State<RoomPage> {
           ));
         } else {
           userMediaTracks.add(ParticipantTrack(participant: participant));
+          participantsWithUserMedia.add(participant);
         }
       }
     }
+
+    for (var participant in widget.room.remoteParticipants.values) {
+      if (!participantsWithUserMedia.contains(participant)) {
+        userMediaTracks.add(ParticipantTrack(participant: participant));
+      }
+    }
+
     // sort speakers for the grid
     userMediaTracks.sort((a, b) {
       // loudest speaker first
@@ -203,21 +213,24 @@ class _RoomPageState extends State<RoomPage> {
           b.participant.joinedAt.millisecondsSinceEpoch;
     });
 
-    final localParticipantTracks =
-        widget.room.localParticipant?.videoTrackPublications;
-    if (localParticipantTracks != null) {
+    final localParticipant = widget.room.localParticipant;
+    if (localParticipant != null) {
+      final localParticipantTracks = localParticipant.videoTrackPublications;
+      bool hasUserMedia = false;
       for (var t in localParticipantTracks) {
         if (t.isScreenShare) {
           screenTracks.add(ParticipantTrack(
-            participant: widget.room.localParticipant!,
+            participant: localParticipant,
             type: ParticipantTrackType.kScreenShare,
           ));
         } else {
-          userMediaTracks.add(
-              ParticipantTrack(participant: widget.room.localParticipant!));
+          hasUserMedia = true;
         }
       }
+      userMediaTracks.add(
+            ParticipantTrack(participant: localParticipant));
     }
+
     setState(() {
       participantTracks = [...screenTracks, ...userMediaTracks];
     });

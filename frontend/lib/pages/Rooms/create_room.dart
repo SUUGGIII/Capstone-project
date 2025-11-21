@@ -279,28 +279,28 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'Name(회원정보, DB꺼(자동 입력 -> 추후 칸 삭제))',
+                  label: 'Name(회원 정보, 입력가능한 칸)',
                   ctrl: _nameCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'Identity(회원정보, DB꺼(자동입력 -> 추후 칸 삭제))',
+                  label: 'Identity(USERS의 USER_ID, DB꺼(자동입력 -> 추후 칸 삭제))',
                   ctrl: _identityCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'metadata(직책, 뭐 방장 이런거?, DB꺼?)',
+                  label: 'metadata(직책, 뭐 방장 이런거?, 입력가능한 칸)',
                   ctrl: _metadataCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'RoomName(생성할때 입력하는거)(회의실별 고유값)',
+                  label: 'RoomName(회의실별 고유값)',
                   ctrl: _roomNameCtrl,
                 ),
               ),
