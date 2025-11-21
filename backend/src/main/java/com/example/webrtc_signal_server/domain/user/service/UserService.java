@@ -98,6 +98,10 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         //회원 정보 수정
         entity.updateUser(dto);
 
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            entity.updatePassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
         return userRepository.save(entity).getId();
     }
 

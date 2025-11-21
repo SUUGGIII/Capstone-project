@@ -76,6 +76,10 @@ public class UserEntity {
         this.nickname = dto.getNickname();
     }
 
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
     //연관관계편의 메소드(sessionParticipants)
     public void addSessionParticipant(SessionParticipantEntity sessionParticipant) {
         this.sessionParticipants.add(sessionParticipant);
