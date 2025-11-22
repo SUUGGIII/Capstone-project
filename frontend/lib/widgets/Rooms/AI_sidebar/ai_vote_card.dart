@@ -1,11 +1,56 @@
-// 기능: AI 어시스턴트 사이드바 내에서 투표 제안(Vote)을 표시하는 카드 위젯을 구현함. 닫기 버튼을 통해 카드 제거 기능을 제공함.
-// 호출: flutter/material.dart의 기본 위젯들을 사용하여 UI를 구성함. 다른 커스텀 위젯이나 파일을 직접 호출하지 않음.
-// 호출됨: ai_assistant_sidebar.dart 파일에서 AiVoteCard 위젯 형태로 호출되어 사용됨.
 import 'package:flutter/material.dart';
+import 'package:meeting_app/models/vote_model.dart';
+import 'package:meeting_app/services/api_service.dart';
 
-class AiVoteCard extends StatelessWidget {
+class AiVoteCard extends StatefulWidget {
+  final VoteEvent voteEvent;
+  final String roomName;
+  final String voterId;
   final VoidCallback? onRemove;
-  const AiVoteCard({super.key, this.onRemove});
+
+  const AiVoteCard({
+    super.key,
+    required this.voteEvent,
+    required this.roomName,
+    required this.voterId,
+    this.onRemove,
+  });
+
+  @override
+  State<AiVoteCard> createState() => _AiVoteCardState();
+}
+
+class _AiVoteCardState extends State<AiVoteCard> {
+  bool _isLoading = false;
+
+  void _handleVote(String selectedOption) async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await ApiService.submitVote(
+      roomName: widget.roomName,
+      topic: widget.voteEvent.topic,
+      voterId: widget.voterId,
+      selectedOption: selectedOption,
+    );
+
+    if (!mounted) return;
+
+    // Show SnackBar and then remove the card
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? '투표가 완료되었습니다.' : '투표 제출에 실패했습니다.'),
+      ),
+    );
+
+    // After showing feedback, trigger the removal/clearing of the card
+    if (widget.onRemove != null) {
+      widget.onRemove!();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,20 +65,41 @@ class AiVoteCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'AI가 투표를 제안합니다',
-                style: TextStyle(color: Colors.black, fontSize: 16),
+              Text(
+                widget.voteEvent.topic,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(height: 10),
-              // Content will be dynamic later
+              Text("제안자: ${widget.voteEvent.proposer}"),
+              const Divider(),
+              if (_isLoading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else
+                ...widget.voteEvent.options.map((option) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: ElevatedButton(
+                      onPressed: () => _handleVote(option),
+                      child: Text(option),
+                    ),
+                  );
+                }).toList(),
             ],
           ),
           Positioned(
-            top: 0,
-            right: 0,
+            top: -10,
+            right: -10,
             child: IconButton(
               icon: const Icon(Icons.close, size: 16, color: Colors.grey),
-              onPressed: onRemove,
+              onPressed: widget.onRemove,
             ),
           ),
         ],

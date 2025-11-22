@@ -1,10 +1,6 @@
-// 기능: 실제 화상 회의가 진행되는 메인 화면을 구성함. 참가자들의 비디오 트랙을 표시하고, 발언자 순으로 정렬하며, 미디어 컨트롤 및 AI 어시스턴트 사이드바를 통합하여 제공함. LiveKit 룸 이벤트 리스너를 설정하고 관리함.
-// 호출: ParticipantWidget을 호출하여 각 참가자의 화면을 렌더링하고, ControlsWidget을 하단에 포함하여 미디어 제어를 담당함. AiAssistantSidebar를 호출하여 AI 어시스턴트 기능을 제공함. livekit_client 패키지의 Room 및 LocalParticipant 객체 메소드를 사용하여 룸 상태 및 참가자 미디어를 관리함. utils/exts.dart 및 utils/utils.dart의 확장 함수들을 사용함.
-// 호출됨: prejoin.dart 파일에서 LiveKit 룸 연결 성공 시 RoomPage 위젯 형태로 호출되어 사용됨.
 import 'package:meeting_app/utils/navigator.dart';
 
 import '../../models/vote_model.dart';
-import '../../widgets/vote_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -38,6 +34,10 @@ class _RoomPageState extends State<RoomPage> {
   List<ParticipantTrack> participantTracks = [];
   EventsListener<RoomEvent> get _listener => widget.listener;
   bool get fastConnection => widget.room.engine.fastConnectOptions != null;
+
+  VoteEvent? _currentVoteEvent;
+  bool _isSidebarVisible = false;
+
   @override
   void initState() {
     super.initState();
@@ -123,19 +123,10 @@ class _RoomPageState extends State<RoomPage> {
         String decodedString = utf8.decode(event.data);
         Map<String, dynamic> jsonData = jsonDecode(decodedString);
         if (jsonData['type'] == 'VOTE_CREATED') {
-          final voteEvent = VoteEvent.fromJson(jsonData);
-          final localParticipant = widget.room.localParticipant;
-          if (navigatorKey.currentState?.context != null &&
-              localParticipant != null) {
-            showDialog(
-              context: navigatorKey.currentState!.context,
-              builder: (context) => VoteDialog(
-                voteEvent: voteEvent,
-                roomName: widget.room.name ?? "Unknown Room",
-                voterId: localParticipant.identity ?? "Unknown User",
-              ),
-            );
-          }
+          setState(() {
+            _currentVoteEvent = VoteEvent.fromJson(jsonData);
+            _isSidebarVisible = true; // Automatically open the sidebar
+          });
         } else {
           context.showDataReceivedDialog(decodedString);
         }
@@ -275,8 +266,6 @@ class _RoomPageState extends State<RoomPage> {
     return 4;
   }
 
-  bool _isSidebarVisible = false;
-
   void _toggleSidebar() {
     setState(() {
       _isSidebarVisible = !_isSidebarVisible;
@@ -324,7 +313,16 @@ class _RoomPageState extends State<RoomPage> {
             ),
           ),
           if (_isSidebarVisible)
-            const AiAssistantSidebar(),
+            AiAssistantSidebar(
+              voteEvent: _currentVoteEvent,
+              roomName: widget.room.name,
+              voterId: widget.room.localParticipant?.identity,
+              onVoteClear: () {
+                setState(() {
+                  _currentVoteEvent = null;
+                });
+              },
+            ),
         ],
       ),
     );
