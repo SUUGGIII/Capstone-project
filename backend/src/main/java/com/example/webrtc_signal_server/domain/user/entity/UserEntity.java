@@ -1,6 +1,5 @@
 package com.example.webrtc_signal_server.domain.user.entity;
 
-import com.example.webrtc_signal_server.domain.session.entity.PollVoteEntity;
 import com.example.webrtc_signal_server.domain.session.entity.SessionParticipantEntity;
 import com.example.webrtc_signal_server.domain.user.dto.UserRequestDTO;
 import jakarta.persistence.*;
@@ -67,8 +66,6 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<SessionParticipantEntity> sessionParticipants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<PollVoteEntity> pollVotes = new ArrayList<>();
 
 
     public void updateUser(UserRequestDTO dto) {
@@ -86,9 +83,5 @@ public class UserEntity {
         sessionParticipant.associateUser(this);
     }
 
-    //연관관계편의 메소드(pollVotes)
-    public void addPollVote(PollVoteEntity pollVote) {
-        this.pollVotes.add(pollVote);
-        pollVote.associateUser(this);
-    }
+
 }
