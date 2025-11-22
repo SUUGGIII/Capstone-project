@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:meeting_app/models/vote_model.dart';
+import 'package:meeting_app/models/vote/vote_session.dart';
 import 'package:meeting_app/services/api_service.dart';
 
 class AiVoteCard extends StatefulWidget {
-  final VoteEvent voteEvent;
-  final String roomName;
+  final VoteSession voteSession;
   final String voterId;
+  final bool isProposer;
   final VoidCallback? onRemove;
 
   const AiVoteCard({
     super.key,
-    required this.voteEvent,
-    required this.roomName,
+    required this.voteSession,
     required this.voterId,
+    required this.isProposer,
     this.onRemove,
   });
 
@@ -22,34 +22,47 @@ class AiVoteCard extends StatefulWidget {
 
 class _AiVoteCardState extends State<AiVoteCard> {
   bool _isLoading = false;
+  bool _hasVoted = false;
+  String? _myVote;
 
   void _handleVote(String selectedOption) async {
-    if (_isLoading) return;
+    if (_isLoading || _hasVoted) return;
 
     setState(() {
       _isLoading = true;
     });
 
-    final success = await ApiService.submitVote(
-      roomName: widget.roomName,
-      topic: widget.voteEvent.topic,
+    final success = await ApiService.castVote(
+      voteId: widget.voteSession.voteId,
       voterId: widget.voterId,
       selectedOption: selectedOption,
     );
 
     if (!mounted) return;
 
-    // Show SnackBar and then remove the card
+    setState(() {
+      _isLoading = false;
+      if (success) {
+        _hasVoted = true;
+        _myVote = selectedOption;
+      }
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? '투표가 완료되었습니다.' : '투표 제출에 실패했습니다.'),
+        content: Text(success ? '투표가 제출되었습니다.' : '투표 제출에 실패했습니다.'),
       ),
     );
+  }
 
-    // After showing feedback, trigger the removal/clearing of the card
-    if (widget.onRemove != null) {
-      widget.onRemove!();
-    }
+  void _handleCloseVote() async {
+    final success = await ApiService.closeVote(voteId: widget.voteSession.voteId);
+     if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? '투표가 마감되었습니다.' : '투표 마감에 실패했습니다.'),
+      ),
+    );
   }
 
   @override
@@ -63,17 +76,16 @@ class _AiVoteCardState extends State<AiVoteCard> {
       child: Stack(
         children: [
           Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                widget.voteEvent.topic,
+                widget.voteSession.topic,
                 style: const TextStyle(
                   color: Colors.black,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text("제안자: ${widget.voteEvent.proposer}"),
               const Divider(),
               if (_isLoading)
                 const Center(
@@ -83,15 +95,34 @@ class _AiVoteCardState extends State<AiVoteCard> {
                   ),
                 )
               else
-                ...widget.voteEvent.options.map((option) {
+                ...widget.voteSession.options.map((option) {
+                  final isSelected = _myVote == option;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: ElevatedButton(
-                      onPressed: () => _handleVote(option),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isSelected ? Colors.blue.shade100 : null
+                      ),
+                      onPressed: _hasVoted ? null : () => _handleVote(option),
                       child: Text(option),
                     ),
                   );
                 }).toList(),
+              
+              if (_hasVoted)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text('내 선택: $_myVote', textAlign: TextAlign.center, style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                ),
+
+              if (widget.isProposer) ...[
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _handleCloseVote,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade400),
+                  child: const Text('투표 마감'),
+                )
+              ]
             ],
           ),
           Positioned(

@@ -1,8 +1,9 @@
 package com.example.webrtc_signal_server.api;
 
-import com.example.webrtc_signal_server.domain.vote.dto.VoteRequest;
-import com.example.webrtc_signal_server.domain.vote.entity.VoteResult;
-import com.example.webrtc_signal_server.domain.vote.repository.VoteResultRepository;
+import com.example.webrtc_signal_server.domain.vote.dto.VoteCastRequest;
+import com.example.webrtc_signal_server.domain.vote.dto.VoteStartRequest;
+import com.example.webrtc_signal_server.domain.vote.service.VoteService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,17 +13,23 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/votes")
 public class VoteController {
 
-    private final VoteResultRepository voteResultRepository;
+    private final VoteService voteService;
 
-    @PostMapping
-    public ResponseEntity<Void> submitVote(@RequestBody VoteRequest request) {
-        VoteResult voteResult = VoteResult.of(
-                request.getRoomName(),
-                request.getTopic(),
-                request.getVoterId(),
-                request.getSelectedOption()
-        );
-        voteResultRepository.save(voteResult);
+    @PostMapping("/start")
+    public ResponseEntity<Void> startVote(@RequestBody VoteStartRequest request) throws JsonProcessingException {
+        voteService.startVote(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/cast")
+    public ResponseEntity<Void> castVote(@RequestBody VoteCastRequest request) {
+        voteService.castVote(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/close")
+    public ResponseEntity<Void> closeVote(@PathVariable("id") Long voteId) throws JsonProcessingException {
+        voteService.closeVote(voteId);
         return ResponseEntity.ok().build();
     }
 }

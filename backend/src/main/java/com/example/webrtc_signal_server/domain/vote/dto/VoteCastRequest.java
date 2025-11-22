@@ -5,9 +5,8 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class VoteRequest {
-    private String roomName;
-    private String topic;
+public class VoteCastRequest {
+    private Long voteId;
     private String voterId;
     private String selectedOption;
 }

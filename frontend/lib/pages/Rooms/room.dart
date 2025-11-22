@@ -1,6 +1,11 @@
-import 'package:meeting_app/utils/navigator.dart';
+import 'package:meeting_app/models/vote/vote_proposal.dart';
+import 'package:meeting_app/models/vote/vote_results.dart';
+import 'package:meeting_app/models/vote/vote_session.dart';
+import 'package:meeting_app/services/api_service.dart';
+import 'package:meeting_app/widgets/Rooms/AI_sidebar/edit_vote_card.dart';
+import 'package:meeting_app/widgets/Rooms/AI_sidebar/vote_results_card.dart';
+import 'package:meeting_app/widgets/Rooms/AI_sidebar/ai_vote_card.dart';
 
-import '../../models/vote_model.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -35,7 +40,11 @@ class _RoomPageState extends State<RoomPage> {
   EventsListener<RoomEvent> get _listener => widget.listener;
   bool get fastConnection => widget.room.engine.fastConnectOptions != null;
 
-  VoteEvent? _currentVoteEvent;
+  // Vote lifecycle state
+  VoteProposal? _currentVoteProposal;
+  VoteSession? _currentVoteSession;
+  VoteResults? _currentVoteResults;
+
   bool _isSidebarVisible = false;
 
   @override
@@ -122,23 +131,39 @@ class _RoomPageState extends State<RoomPage> {
       try {
         String decodedString = utf8.decode(event.data);
         Map<String, dynamic> jsonData = jsonDecode(decodedString);
-        if (jsonData['type'] == 'VOTE_CREATED') {
-          setState(() {
-            _currentVoteEvent = VoteEvent.fromJson(jsonData);
-            _isSidebarVisible = true; // Automatically open the sidebar
-          });
-        } else {
-          context.showDataReceivedDialog(decodedString);
+        
+        switch (jsonData['type']) {
+          case 'VOTE_CREATED':
+            setState(() {
+              _currentVoteProposal = VoteProposal.fromJson(jsonData);
+              _currentVoteSession = null;
+              _currentVoteResults = null;
+              _isSidebarVisible = true;
+            });
+            break;
+          case 'VOTE_STARTED':
+            setState(() {
+              _currentVoteProposal = null;
+              _currentVoteSession = VoteSession.fromJson(jsonData);
+              _currentVoteResults = null;
+              _isSidebarVisible = true;
+            });
+            break;
+          case 'VOTE_ENDED':
+             setState(() {
+              _currentVoteProposal = null;
+              _currentVoteSession = null;
+              _currentVoteResults = VoteResults.fromJson(jsonData);
+              _isSidebarVisible = true;
+            });
+            break;
+          default:
+            context.showDataReceivedDialog(decodedString);
+            break;
         }
+
       } catch (e) {
         print("Error decoding or handling data: $e");
-        String decoded = 'Failed to decode';
-        try {
-          decoded = utf8.decode(event.data);
-        } catch (err) {
-          print('Failed to decode: $err');
-        }
-        context.showDataReceivedDialog(decoded);
       }
     })
     ..on<AudioPlaybackStatusChanged>((event) async {
@@ -272,6 +297,59 @@ class _RoomPageState extends State<RoomPage> {
     });
   }
 
+  List<Widget> _buildSidebarWidgets() {
+    final localParticipant = widget.room.localParticipant;
+    final voteProposal = _currentVoteProposal;
+
+    List<Widget> sidebarWidgets = [];
+    if (localParticipant != null) {
+      // Proposer sees the edit card
+      if (voteProposal != null && voteProposal.proposerId == localParticipant.identity) {
+        sidebarWidgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: EditVoteCard(
+            proposal: voteProposal,
+            onCancel: () => setState(() => _currentVoteProposal = null),
+            onStart: (topic, options) {
+              ApiService.startVote(
+                roomName: widget.room.name ?? "Unknown Room",
+                topic: topic,
+                options: options,
+                proposerId: voteProposal.proposerId,
+              );
+              setState(() => _currentVoteProposal = null);
+            },
+          ),
+        ));
+      }
+
+      // All users see the voting card
+      if (_currentVoteSession != null) {
+        sidebarWidgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: AiVoteCard(
+            voteSession: _currentVoteSession!,
+            voterId: localParticipant.identity,
+            isProposer: localParticipant.identity == _currentVoteSession!.proposerId,
+            onRemove: () => setState(() => _currentVoteSession = null),
+          ),
+        ));
+      }
+
+      // All users see the results card
+      if (_currentVoteResults != null) {
+        sidebarWidgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: VoteResultsCard(
+            results: _currentVoteResults!,
+            onDismiss: () => setState(() => _currentVoteResults = null),
+          ),
+        ));
+      }
+    }
+    return sidebarWidgets;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -314,14 +392,7 @@ class _RoomPageState extends State<RoomPage> {
           ),
           if (_isSidebarVisible)
             AiAssistantSidebar(
-              voteEvent: _currentVoteEvent,
-              roomName: widget.room.name,
-              voterId: widget.room.localParticipant?.identity,
-              onVoteClear: () {
-                setState(() {
-                  _currentVoteEvent = null;
-                });
-              },
+              children: _buildSidebarWidgets(),
             ),
         ],
       ),

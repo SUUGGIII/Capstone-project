@@ -4,12 +4,13 @@ import com.example.webrtc_signal_server.domain.livekit.dto.LiveKitRequestDTO;
 import io.livekit.server.*;
 import livekit.LivekitEgress;
 import livekit.LivekitModels;
-import org.springframework.beans.factory.annotation.Value;
+import livekit.LivekitRtc;
 import org.springframework.stereotype.Service;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class LiveKitService {
@@ -52,6 +53,26 @@ public class LiveKitService {
 
         // 4. JWT 문자열로 서명하고 변환
         return accessToken.toJwt();
+    }
+
+    /**
+     * 특정 방의 모든 참가자에게 데이터를 전송합니다.
+     * @param roomName 데이터를 보낼 방의 이름
+     * @param data 전송할 문자열 데이터
+     */
+    public void sendDataToRoom(String roomName, String data) {
+        try {
+            byte[] dataPayload = data.getBytes(StandardCharsets.UTF_8);
+
+            // The correct method signature for this SDK version
+            Call<Void> call = roomServiceClient.sendData(roomName, dataPayload, LivekitModels.DataPacket.Kind.RELIABLE);
+
+            // 비동기 실행을 원하면 .enqueue() 사용
+            call.execute();
+        } catch (IOException e) {
+            // 실제 프로덕션 코드에서는 로깅 프레임워크 사용을 권장합니다.
+            e.printStackTrace();
+        }
     }
     // 트랙 Egress 시작 API 호출 시뮬레이션
 //    public Call<LivekitEgress.EgressInfo> startTrackEgress(

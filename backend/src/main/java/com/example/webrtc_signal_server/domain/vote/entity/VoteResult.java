@@ -19,22 +19,23 @@ public class VoteResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String roomName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vote_id", nullable = false)
+    private Vote vote;
 
-    private String topic;
-
+    @Column(nullable = false)
     private String voterId;
 
+    @Column(nullable = false)
     private String selectedOption;
 
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    public static VoteResult of(String roomName, String topic, String voterId, String selectedOption) {
+    public static VoteResult of(Vote vote, String voterId, String selectedOption) {
         VoteResult voteResult = new VoteResult();
-        voteResult.roomName = roomName;
-        voteResult.topic = topic;
+        voteResult.vote = vote;
         voteResult.voterId = voterId;
         voteResult.selectedOption = selectedOption;
         return voteResult;
