@@ -1,11 +1,6 @@
-import 'package:meeting_app/models/vote/vote_proposal.dart';
-import 'package:meeting_app/models/vote/vote_results.dart';
-import 'package:meeting_app/models/vote/vote_session.dart';
-import 'package:meeting_app/services/api_service.dart';
-import 'package:meeting_app/widgets/Rooms/AI_sidebar/edit_vote_card.dart';
-import 'package:meeting_app/widgets/Rooms/AI_sidebar/vote_results_card.dart';
-import 'package:meeting_app/widgets/Rooms/AI_sidebar/ai_vote_card.dart';
-
+// 기능: 실제 화상 회의가 진행되는 메인 화면을 구성함. 참가자들의 비디오 트랙을 표시하고, 발언자 순으로 정렬하며, 미디어 컨트롤 및 AI 어시스턴트 사이드바를 통합하여 제공함. LiveKit 룸 이벤트 리스너를 설정하고 관리함.
+// 호출: ParticipantWidget을 호출하여 각 참가자의 화면을 렌더링하고, ControlsWidget을 하단에 포함하여 미디어 제어를 담당함. AiAssistantSidebar를 호출하여 AI 어시스턴트 기능을 제공함. livekit_client 패키지의 Room 및 LocalParticipant 객체 메소드를 사용하여 룸 상태 및 참가자 미디어를 관리함. utils/exts.dart 및 utils/utils.dart의 확장 함수들을 사용함.
+// 호출됨: prejoin.dart 파일에서 LiveKit 룸 연결 성공 시 RoomPage 위젯 형태로 호출되어 사용됨.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -39,14 +34,6 @@ class _RoomPageState extends State<RoomPage> {
   List<ParticipantTrack> participantTracks = [];
   EventsListener<RoomEvent> get _listener => widget.listener;
   bool get fastConnection => widget.room.engine.fastConnectOptions != null;
-
-  // Vote lifecycle state
-  VoteProposal? _currentVoteProposal;
-  VoteSession? _currentVoteSession;
-  VoteResults? _currentVoteResults;
-
-  bool _isSidebarVisible = false;
-
   @override
   void initState() {
     super.initState();
@@ -128,43 +115,13 @@ class _RoomPageState extends State<RoomPage> {
       print('Room metadata changed: ${event.metadata}');
     })
     ..on<DataReceivedEvent>((event) {
+      String decoded = 'Failed to decode';
       try {
-        String decodedString = utf8.decode(event.data);
-        Map<String, dynamic> jsonData = jsonDecode(decodedString);
-        
-        switch (jsonData['type']) {
-          case 'VOTE_CREATED':
-            setState(() {
-              _currentVoteProposal = VoteProposal.fromJson(jsonData);
-              _currentVoteSession = null;
-              _currentVoteResults = null;
-              _isSidebarVisible = true;
-            });
-            break;
-          case 'VOTE_STARTED':
-            setState(() {
-              _currentVoteProposal = null;
-              _currentVoteSession = VoteSession.fromJson(jsonData);
-              _currentVoteResults = null;
-              _isSidebarVisible = true;
-            });
-            break;
-          case 'VOTE_ENDED':
-             setState(() {
-              _currentVoteProposal = null;
-              _currentVoteSession = null;
-              _currentVoteResults = VoteResults.fromJson(jsonData);
-              _isSidebarVisible = true;
-            });
-            break;
-          default:
-            context.showDataReceivedDialog(decodedString);
-            break;
-        }
-
-      } catch (e) {
-        print("Error decoding or handling data: $e");
+        decoded = utf8.decode(event.data);
+      } catch (err) {
+        print('Failed to decode: $err');
       }
+      context.showDataReceivedDialog(decoded);
     })
     ..on<AudioPlaybackStatusChanged>((event) async {
       if (!widget.room.canPlaybackAudio) {
@@ -205,8 +162,6 @@ class _RoomPageState extends State<RoomPage> {
   void _sortParticipants() {
     List<ParticipantTrack> userMediaTracks = [];
     List<ParticipantTrack> screenTracks = [];
-    final participantsWithUserMedia = <Participant>{};
-
     for (var participant in widget.room.remoteParticipants.values) {
       for (var t in participant.videoTrackPublications) {
         if (t.isScreenShare) {
@@ -216,17 +171,9 @@ class _RoomPageState extends State<RoomPage> {
           ));
         } else {
           userMediaTracks.add(ParticipantTrack(participant: participant));
-          participantsWithUserMedia.add(participant);
         }
       }
     }
-
-    for (var participant in widget.room.remoteParticipants.values) {
-      if (!participantsWithUserMedia.contains(participant)) {
-        userMediaTracks.add(ParticipantTrack(participant: participant));
-      }
-    }
-
     // sort speakers for the grid
     userMediaTracks.sort((a, b) {
       // loudest speaker first
@@ -256,24 +203,21 @@ class _RoomPageState extends State<RoomPage> {
           b.participant.joinedAt.millisecondsSinceEpoch;
     });
 
-    final localParticipant = widget.room.localParticipant;
-    if (localParticipant != null) {
-      final localParticipantTracks = localParticipant.videoTrackPublications;
-      bool hasUserMedia = false;
+    final localParticipantTracks =
+        widget.room.localParticipant?.videoTrackPublications;
+    if (localParticipantTracks != null) {
       for (var t in localParticipantTracks) {
         if (t.isScreenShare) {
           screenTracks.add(ParticipantTrack(
-            participant: localParticipant,
+            participant: widget.room.localParticipant!,
             type: ParticipantTrackType.kScreenShare,
           ));
         } else {
-          hasUserMedia = true;
+          userMediaTracks.add(
+              ParticipantTrack(participant: widget.room.localParticipant!));
         }
       }
-      userMediaTracks.add(
-            ParticipantTrack(participant: localParticipant));
     }
-
     setState(() {
       participantTracks = [...screenTracks, ...userMediaTracks];
     });
@@ -291,63 +235,12 @@ class _RoomPageState extends State<RoomPage> {
     return 4;
   }
 
+  bool _isSidebarVisible = false;
+
   void _toggleSidebar() {
     setState(() {
       _isSidebarVisible = !_isSidebarVisible;
     });
-  }
-
-  List<Widget> _buildSidebarWidgets() {
-    final localParticipant = widget.room.localParticipant;
-    final voteProposal = _currentVoteProposal;
-
-    List<Widget> sidebarWidgets = [];
-    if (localParticipant != null) {
-      // Proposer sees the edit card
-      if (voteProposal != null && voteProposal.proposerId == localParticipant.identity) {
-        sidebarWidgets.add(Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: EditVoteCard(
-            proposal: voteProposal,
-            onCancel: () => setState(() => _currentVoteProposal = null),
-            onStart: (topic, options) {
-              ApiService.startVote(
-                roomName: widget.room.name ?? "Unknown Room",
-                topic: topic,
-                options: options,
-                proposerId: voteProposal.proposerId,
-              );
-              setState(() => _currentVoteProposal = null);
-            },
-          ),
-        ));
-      }
-
-      // All users see the voting card
-      if (_currentVoteSession != null) {
-        sidebarWidgets.add(Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: AiVoteCard(
-            voteSession: _currentVoteSession!,
-            voterId: localParticipant.identity,
-            isProposer: localParticipant.identity == _currentVoteSession!.proposerId,
-            onRemove: () => setState(() => _currentVoteSession = null),
-          ),
-        ));
-      }
-
-      // All users see the results card
-      if (_currentVoteResults != null) {
-        sidebarWidgets.add(Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: VoteResultsCard(
-            results: _currentVoteResults!,
-            onDismiss: () => setState(() => _currentVoteResults = null),
-          ),
-        ));
-      }
-    }
-    return sidebarWidgets;
   }
 
   @override
@@ -391,9 +284,7 @@ class _RoomPageState extends State<RoomPage> {
             ),
           ),
           if (_isSidebarVisible)
-            AiAssistantSidebar(
-              children: _buildSidebarWidgets(),
-            ),
+            const AiAssistantSidebar(),
         ],
       ),
     );

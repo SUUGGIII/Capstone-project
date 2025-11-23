@@ -36,7 +36,3 @@ src/main/resources/application.properties
 
 ### VS Code ###
 .vscode/
-
-
-### antigravity ###
-.agent/

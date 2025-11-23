@@ -59,6 +59,13 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     _identityCtrl.text = 'user-${DateTime.now().millisecondsSinceEpoch % 1000}';
     _metadataCtrl.text = 'MeetingParticipant';
     _roomNameCtrl.text = 'my-team-meeting';
+
+    // Fetch token on page load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _fetchLiveKitToken(context);
+      }
+    });
   }
 
   @override
@@ -160,6 +167,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
         if (livekitUrl != null) {
           _uriCtrl.text = livekitUrl;
         }
+        await _writePrefs();
       } else {
         await ctx.showErrorDialog(
           '토큰 요청 실패: HTTP ${response.statusCode}\n서버 응답: ${response.body}',
@@ -276,28 +284,28 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'Name(회원 정보, 입력가능한 칸)',
+                  label: 'Name(회원정보, DB꺼(자동 입력 -> 추후 칸 삭제))',
                   ctrl: _nameCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'Identity(USERS의 USER_ID, DB꺼(자동입력 -> 추후 칸 삭제))',
+                  label: 'Identity(회원정보, DB꺼(자동입력 -> 추후 칸 삭제))',
                   ctrl: _identityCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'metadata(직책, 뭐 방장 이런거?, 입력가능한 칸)',
+                  label: 'metadata(직책, 뭐 방장 이런거?, DB꺼?)',
                   ctrl: _metadataCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'RoomName(회의실별 고유값)',
+                  label: 'RoomName(생성할때 입력하는거)(회의실별 고유값)',
                   ctrl: _roomNameCtrl,
                 ),
               ),

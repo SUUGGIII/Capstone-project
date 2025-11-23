@@ -8,9 +8,6 @@ import 'package:meeting_app/pages/login_page.dart';
 import 'package:meeting_app/theme/theme.dart';
 
 
-import 'package:meeting_app/utils/navigator.dart';
-
-
 void main() {
   runApp(
     ChangeNotifierProvider(
@@ -26,7 +23,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey,
       title: 'Meeting App',
       theme: LiveKitTheme().buildThemeData(context),
       home: const LoginPage(),
