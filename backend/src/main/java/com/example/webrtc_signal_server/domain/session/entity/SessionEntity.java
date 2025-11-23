@@ -30,9 +30,6 @@ public class SessionEntity {
     @OneToMany(mappedBy = "session")
     private List<BoardEntity> boards = new ArrayList<>();
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "session")
-    private List<PollEntity> polls = new ArrayList<>();
 
     //연관관계편의 메소드(participants)
     public void addParticipant(SessionParticipantEntity participant) {
@@ -46,9 +43,4 @@ public class SessionEntity {
         board.associateSession(this);
     }
 
-    //연관관계편의 메소드(polls)
-    public void addPoll(PollEntity poll) {
-        this.polls.add(poll);
-        poll.associateSession(this);
-    }
 }

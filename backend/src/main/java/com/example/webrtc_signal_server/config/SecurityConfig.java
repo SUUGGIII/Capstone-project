@@ -72,7 +72,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -117,7 +117,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/jwt/exchange", "/jwt/refresh").permitAll()
-                .requestMatchers(HttpMethod.POST, "/user/exist", "/user").permitAll()
+                .requestMatchers(HttpMethod.POST, "/user/exist", "/user", "/api/votes/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/user").hasRole(UserRoleType.USER.name())
                 .requestMatchers(HttpMethod.PUT, "/user").hasRole(UserRoleType.USER.name())
                 .requestMatchers(HttpMethod.DELETE, "/user").hasRole(UserRoleType.USER.name())

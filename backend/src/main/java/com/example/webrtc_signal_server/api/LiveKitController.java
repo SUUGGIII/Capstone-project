@@ -8,8 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Value;
-
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,7 +15,6 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/api")
 public class LiveKitController {
 
     private final LiveKitService liveKitService;
@@ -26,18 +23,10 @@ public class LiveKitController {
         this.liveKitService = liveKitService;
     }
 
-    // 여기에서 설정에서 읽어온 URL을 저장
-    @Value("${livekit.ws-url}")
-    private String livekitWsUrl;
-
     /**
      * LiveKit 서버에 새 방을 생성합니다.
      */
-    @PostMapping(
-            value = "/livekit/room",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
+    @PostMapping(value = "/livekit/createRoom", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<LivekitModels.Room> createRoom(@Validated(LiveKitRequestDTO.roomGroup.class) @RequestBody LiveKitRequestDTO dto) {
         try {
             LivekitModels.Room room = liveKitService.createRoom(dto.getRoomName());
@@ -61,8 +50,6 @@ public class LiveKitController {
         Map<String, String> response = new HashMap<>();
         response.put("identity", dto.getIdentity());
         response.put("token", token);
-        // 설정에서 가져온 lviekit의 주소 설정
-        response.put("url", livekitWsUrl);
 
         return ResponseEntity.ok(response);
     }
