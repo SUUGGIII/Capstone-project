@@ -12,7 +12,6 @@ import 'package:meeting_app/pages/documents_page.dart';
 import 'package:meeting_app/pages/friends_page.dart';
 import 'package:meeting_app/pages/more_page.dart';
 import 'package:meeting_app/pages/Rooms/create_room.dart';
-import 'package:meeting_app/pages/profile_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -105,12 +104,7 @@ class HomePage extends StatelessWidget {
               const SizedBox(width: 16),
               IconButton(
                 icon: const Icon(Icons.person_outline, color: Colors.grey),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ProfilePage()),
-                  );
-                },
+                onPressed: () {},
                 tooltip: '내 프로필',
               ),
               const SizedBox(width: 8),

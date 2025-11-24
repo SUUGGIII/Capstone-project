@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
+
+
+
 @Setter
 public class LiveKitRequestDTO {
     public interface roomGroup {} // 회원 가입시 username 존재 확인

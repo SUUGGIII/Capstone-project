@@ -10,7 +10,6 @@ import 'package:livekit_client/livekit_client.dart';
 import 'package:meeting_app/utils/exts.dart';
 
 import 'room.dart';
-import 'package:meeting_app/widgets/Rooms/no_video.dart';
 
 class JoinArgs {
   JoinArgs({
@@ -305,7 +304,18 @@ class _PreJoinPageState extends State<PreJoinPage> {
                                       _videoTrack!,
                                       mirrorMode: VideoViewMirrorMode.mirror,
                                     )
-                                  : const NoVideoWidget(),
+                                  : Container(
+                                      alignment: Alignment.center,
+                                      child: LayoutBuilder(
+                                        builder: (ctx, constraints) => Icon(
+                                          Icons.videocam_off,
+                                          color: Colors.blue,
+                                          size: math.min(constraints.maxHeight,
+                                                  constraints.maxWidth) *
+                                              0.3,
+                                        ),
+                                      ),
+                                    ),
                             ))),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 5),

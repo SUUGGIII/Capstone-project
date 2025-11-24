@@ -9,7 +9,7 @@ import 'package:meeting_app/pages/Rooms/prejoin.dart';
 import 'package:meeting_app/widgets/text_field.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import 'package:meeting_app/services/api_service.dart';
 import 'dart:convert';
 
 class CreateRoomPage extends StatefulWidget {
@@ -21,7 +21,7 @@ class CreateRoomPage extends StatefulWidget {
 
 class _CreateRoomPageState extends State<CreateRoomPage> {
   static const _liveKitServerBaseUrl = 'http://127.0.0.1:8080';
-  static const _tokenEndpoint = '/livekit/token';
+  static const _tokenEndpoint = '/api/livekit/token';
 
   static const _storeKeyUri = 'uri';
   static const _storeKeyToken = 'token';
@@ -55,11 +55,17 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     if (lkPlatformIs(PlatformType.android)) {
       _checkPermissions();
     }
-    _uriCtrl.text = 'wss://stt-bu5ksfvb.livekit.cloud';
     _nameCtrl.text = 'user';
     _identityCtrl.text = 'user-${DateTime.now().millisecondsSinceEpoch % 1000}';
     _metadataCtrl.text = 'MeetingParticipant';
     _roomNameCtrl.text = 'my-team-meeting';
+
+    // Fetch token on page load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _fetchLiveKitToken(context);
+      }
+    });
   }
 
   @override
@@ -126,49 +132,48 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
   }
 
   Future<void> _fetchLiveKitToken(BuildContext ctx) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userAuthToken = prefs.getString('accessToken');
     final name = _nameCtrl.text.trim();
     final identity = _identityCtrl.text.trim();
     final metadata = _metadataCtrl.text.trim();
     final roomName = _roomNameCtrl.text.trim();
-    final url = Uri.parse(_liveKitServerBaseUrl + _tokenEndpoint);
-    if (userAuthToken == null || userAuthToken.isEmpty) {
-      await ctx.showErrorDialog('토큰 요청 실패: SharedPreferences에 저장된 사용자 accessToken이 없습니다. 먼저 로그인/인증을 통해 토큰을 저장해야 합니다.');
-      return;
-    }
+
     try {
       setState(() {
         _busy = true;
       });
-      print('Requesting token from $url...');
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $userAuthToken',
-        },
-        body: jsonEncode({
+
+      final response = await ApiService.post(
+        _tokenEndpoint,
+        body: {
           'name': name,
           'identity': identity,
           'metadata': metadata,
           'roomName': roomName,
-        }),
+        },
+        context: ctx,
       );
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         final livekitToken = data['token'];
+        final livekitUrl = data['url'];
+
         if (livekitToken != null) {
           _tokenCtrl.text = livekitToken;
         } else {
           await ctx.showErrorDialog('응답에서 LiveKit 토큰(token)을 찾을 수 없습니다.');
         }
+
+        if (livekitUrl != null) {
+          _uriCtrl.text = livekitUrl;
+        }
+        await _writePrefs();
       } else {
         await ctx.showErrorDialog(
-            '토큰 요청 실패: HTTP ${response.statusCode}\n서버 응답: ${response.body}');
+          '토큰 요청 실패: HTTP ${response.statusCode}\n서버 응답: ${response.body}',
+        );
       }
     } catch (e) {
-      print('Token fetching error: $e');
       await ctx.showErrorDialog('토큰 요청 중 오류 발생: $e');
     } finally {
       setState(() {
@@ -279,28 +284,28 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'Name(회원 정보, 입력가능한 칸)',
+                  label: 'Name(회원정보, DB꺼(자동 입력 -> 추후 칸 삭제))',
                   ctrl: _nameCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'Identity(USERS의 USER_ID, DB꺼(자동입력 -> 추후 칸 삭제))',
+                  label: 'Identity(회원정보, DB꺼(자동입력 -> 추후 칸 삭제))',
                   ctrl: _identityCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'metadata(직책, 뭐 방장 이런거?, 입력가능한 칸)',
+                  label: 'metadata(직책, 뭐 방장 이런거?, DB꺼?)',
                   ctrl: _metadataCtrl,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 25),
                 child: LKTextField(
-                  label: 'RoomName(회의실별 고유값)',
+                  label: 'RoomName(생성할때 입력하는거)(회의실별 고유값)',
                   ctrl: _roomNameCtrl,
                 ),
               ),
