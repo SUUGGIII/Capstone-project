@@ -5,6 +5,7 @@ import 'package:meeting_app/services/api_service.dart';
 import 'package:meeting_app/widgets/Rooms/AI_sidebar/edit_vote_card.dart';
 import 'package:meeting_app/widgets/Rooms/AI_sidebar/vote_results_card.dart';
 import 'package:meeting_app/widgets/Rooms/AI_sidebar/ai_vote_card.dart';
+import 'package:meeting_app/widgets/Rooms/AI_sidebar/ai_summary_card.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -302,6 +303,13 @@ class _RoomPageState extends State<RoomPage> {
     final voteProposal = _currentVoteProposal;
 
     List<Widget> sidebarWidgets = [];
+    
+    // Always show AiSummaryCard
+    sidebarWidgets.add(const Padding(
+      padding: EdgeInsets.only(bottom: 16.0),
+      child: AiSummaryCard(),
+    ));
+
     if (localParticipant != null) {
       // Proposer sees the edit card
       if (voteProposal != null && voteProposal.proposerId == localParticipant.identity) {
