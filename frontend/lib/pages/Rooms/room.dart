@@ -47,6 +47,7 @@ class _RoomPageState extends State<RoomPage> {
   VoteResults? _currentVoteResults;
 
   bool _isSidebarVisible = false;
+  bool _isAgentPresent = false;
 
   @override
   void initState() {
@@ -208,7 +209,14 @@ class _RoomPageState extends State<RoomPage> {
     List<ParticipantTrack> screenTracks = [];
     final participantsWithUserMedia = <Participant>{};
 
+    bool agentFound = false;
+
     for (var participant in widget.room.remoteParticipants.values) {
+      if (participant.identity.toLowerCase().contains("agent")) {
+        agentFound = true;
+        continue;
+      }
+      
       for (var t in participant.videoTrackPublications) {
         if (t.isScreenShare) {
           screenTracks.add(ParticipantTrack(
@@ -221,8 +229,11 @@ class _RoomPageState extends State<RoomPage> {
         }
       }
     }
+    
+    _isAgentPresent = agentFound;
 
     for (var participant in widget.room.remoteParticipants.values) {
+      if (participant.identity.toLowerCase().contains("agent")) continue;
       if (!participantsWithUserMedia.contains(participant)) {
         userMediaTracks.add(ParticipantTrack(participant: participant));
       }
@@ -361,47 +372,70 @@ class _RoomPageState extends State<RoomPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Stack(
         children: [
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: participantTracks.isNotEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: GridView.builder(
-                            itemCount: participantTracks.length,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: _getCrossAxisCount(),
-                              childAspectRatio: 16 / 9,
-                            ),
-                            itemBuilder: (BuildContext context, int index) {
-                              return ParticipantWidget.widgetFor(
-                                  participantTracks[index]);
-                            },
-                          ),
-                        )
-                      : Container(),
-                ),
-                if (widget.room.localParticipant != null)
-                  SafeArea(
-                    top: false,
-                    child: ControlsWidget(
-                      widget.room,
-                      widget.room.localParticipant!,
-                      onToggleSidebar: _toggleSidebar,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: participantTracks.isNotEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: GridView.builder(
+                                itemCount: participantTracks.length,
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: _getCrossAxisCount(),
+                                  childAspectRatio: 16 / 9,
+                                ),
+                                itemBuilder: (BuildContext context, int index) {
+                                  return ParticipantWidget.widgetFor(
+                                      participantTracks[index]);
+                                },
+                              ),
+                            )
+                          : Container(),
                     ),
-                  ),
-              ],
+                    if (widget.room.localParticipant != null)
+                      SafeArea(
+                        top: false,
+                        child: ControlsWidget(
+                          widget.room,
+                          widget.room.localParticipant!,
+                          onToggleSidebar: _toggleSidebar,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (_isSidebarVisible)
+                AiAssistantSidebar(
+                  children: _buildSidebarWidgets(),
+                ),
+            ],
+          ),
+          // Debugging: Agent Status Indicator
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: Tooltip(
+              message: "Agent Status: ${_isAgentPresent ? 'Online' : 'Offline'}",
+              child: Container(
+                width: 15,
+                height: 15,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _isAgentPresent ? Colors.green : Colors.red,
+                  boxShadow: const [
+                    BoxShadow(blurRadius: 4, color: Colors.black26)
+                  ],
+                ),
+              ),
             ),
           ),
-          if (_isSidebarVisible)
-            AiAssistantSidebar(
-              children: _buildSidebarWidgets(),
-            ),
         ],
       ),
     );
