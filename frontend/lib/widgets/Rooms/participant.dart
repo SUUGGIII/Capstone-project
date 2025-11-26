@@ -154,7 +154,7 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
                   ...extraWidgets(isScreenShare),
                   ParticipantInfoWidget(
                     title: widget.participant.name.isNotEmpty
-                        ? '${widget.participant.name} (${widget.participant.identity})'
+                        ? widget.participant.name
                         : widget.participant.identity,
                     audioAvailable: audioPublication?.muted == false &&
                         audioPublication?.subscribed == true,

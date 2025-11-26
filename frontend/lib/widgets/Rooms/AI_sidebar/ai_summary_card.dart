@@ -4,8 +4,7 @@
 import 'package:flutter/material.dart';
 
 class AiSummaryCard extends StatelessWidget {
-  final VoidCallback? onRemove;
-  const AiSummaryCard({super.key, this.onRemove});
+  const AiSummaryCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,25 +14,22 @@ class AiSummaryCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8.0),
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '회의 따라잡기',
-                style: TextStyle(color: Colors.black, fontSize: 16),
-              ),
-              const SizedBox(height: 10),
-              // Content will be dynamic later
-            ],
+          const Text(
+            '회의 따라잡기',
+            style: TextStyle(color: Colors.black, fontSize: 16),
           ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: IconButton(
-              icon: const Icon(Icons.close, size: 16, color: Colors.grey),
-              onPressed: onRemove,
+          const SizedBox(height: 10),
+          // Content will be dynamic later
+          const SizedBox(height: 10),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                // No action for now
+              },
+              child: const Text('요청'),
             ),
           ),
         ],
