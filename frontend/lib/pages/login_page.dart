@@ -325,10 +325,6 @@ class _LoginPageState extends State<LoginPage> {
                   open(location, '_self').close();
                 };
               </script>
-              <body>
-                <h1>인증 성공!</h1>
-                <p>토큰 교환 후 앱으로 돌아갑니다. 이 창을 닫아주세요.</p>
-              </body>
             </html>
           ''')
             ..close();

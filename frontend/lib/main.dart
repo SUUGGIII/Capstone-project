@@ -6,8 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:meeting_app/providers/navigation_provider.dart';
 import 'package:meeting_app/pages/login_page.dart';
 import 'package:meeting_app/theme/theme.dart';
-
-
 import 'package:meeting_app/utils/navigator.dart';
 
 
