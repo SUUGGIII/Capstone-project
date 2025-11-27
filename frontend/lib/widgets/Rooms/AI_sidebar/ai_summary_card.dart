@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'dart:convert';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:meeting_app/widgets/Rooms/AI_sidebar/recap_dialog.dart';
 
 class AiSummaryCard extends StatefulWidget {
   final Room room;
@@ -62,6 +63,23 @@ class _AiSummaryCardState extends State<AiSummaryCard> {
         _isRequesting = false;
       });
     }
+  }
+
+  // 공개 메서드: 로딩 상태 리셋
+  void resetLoadingState() {
+    if (mounted) {
+      setState(() {
+        _isRequesting = false;
+      });
+    }
+  }
+
+  // 공개 메서드: recap 다이얼로그 표시
+  void showRecapDialog(BuildContext context, Map<String, dynamic> recapData) {
+    showDialog(
+      context: context,
+      builder: (context) => RecapDialog(recapData: recapData),
+    );
   }
 
   @override

@@ -49,6 +49,9 @@ class _RoomPageState extends State<RoomPage> {
   bool _isSidebarVisible = false;
   bool _isAgentPresent = false;
 
+  // GlobalKey for AiSummaryCard to access its state
+  final GlobalKey _aiSummaryCardKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -158,6 +161,18 @@ class _RoomPageState extends State<RoomPage> {
               _currentVoteResults = VoteResults.fromJson(jsonData);
               _isSidebarVisible = true;
             });
+             break;
+          case 'RECAP_GENERATED':
+            // Handle recap data from Agent
+            final recapData = jsonData['data'] as Map<String, dynamic>?;
+            if (recapData != null) {
+              // Reset loading state and show recap dialog
+              final state = _aiSummaryCardKey.currentState;
+              if (state != null) {
+                (state as dynamic).resetLoadingState();
+                (state as dynamic).showRecapDialog(context, recapData);
+              }
+            }
             break;
           default:
             context.showDataReceivedDialog(decodedString);
@@ -318,7 +333,10 @@ class _RoomPageState extends State<RoomPage> {
     // Always show AiSummaryCard
     sidebarWidgets.add(Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
-      child: AiSummaryCard(room: widget.room),
+      child: AiSummaryCard(
+        key: _aiSummaryCardKey,
+        room: widget.room,
+      ),
     ));
 
     if (localParticipant != null) {
