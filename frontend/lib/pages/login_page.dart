@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../home_page.dart';
+import '../services/user_store.dart';
 import 'signup_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
@@ -316,7 +317,20 @@ class _LoginPageState extends State<LoginPage> {
           request.response
             ..statusCode = HttpStatus.ok
             ..headers.contentType = ContentType.html
-            ..write('<html><body><h1>인증 성공!</h1><p>토큰 교환 후 앱으로 돌아갑니다. 이 창을 닫아주세요.</p></body></html>')
+            ..write('''
+            <html>
+              <script>
+                window.onload = function() {
+                  window.close();
+                  open(location, '_self').close();
+                };
+              </script>
+              <body>
+                <h1>인증 성공!</h1>
+                <p>토큰 교환 후 앱으로 돌아갑니다. 이 창을 닫아주세요.</p>
+              </body>
+            </html>
+          ''')
             ..close();
           await request.response.close();
 
@@ -328,7 +342,7 @@ class _LoginPageState extends State<LoginPage> {
             // 수신된 Refresh Token을 사용하여 Access/New Refresh Token 교환 요청
             try {
               await refreshAndSaveTokens(receivedRefreshToken);
-
+              await UserStore().fetchUserDetails();
               if (mounted) {
                 // 홈 페이지로 이동 (Navigator.pushReplacement로 변경하여 뒤로 가기 방지)
                 Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage()));
