@@ -316,9 +316,9 @@ class _RoomPageState extends State<RoomPage> {
     List<Widget> sidebarWidgets = [];
     
     // Always show AiSummaryCard
-    sidebarWidgets.add(const Padding(
-      padding: EdgeInsets.only(bottom: 16.0),
-      child: AiSummaryCard(),
+    sidebarWidgets.add(Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: AiSummaryCard(room: widget.room),
     ));
 
     if (localParticipant != null) {
