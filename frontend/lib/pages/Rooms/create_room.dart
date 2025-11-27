@@ -49,6 +49,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
   bool _e2ee = false;
   bool _multiCodec = false;
   String _preferredCodec = 'VP8';
+  bool _isEmptyWindowMode = false;
 
   @override
   void initState() {
@@ -257,8 +258,23 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
         title: const Text('New Meeting Settings'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isEmptyWindowMode ? Icons.visibility_off : Icons.visibility,
+              color: Colors.blue,
+            ),
+            onPressed: () {
+              setState(() {
+                _isEmptyWindowMode = !_isEmptyWindowMode;
+              });
+            },
+          ),
+        ],
       ),
-    body: Container(
+    body: _isEmptyWindowMode
+        ? Container(color: Colors.white)
+        : Container(
       alignment: Alignment.center,
       child: SingleChildScrollView(
         child: Container(
