@@ -20,6 +20,8 @@ import 'package:meeting_app/utils/utils.dart';
 
 import '../../widgets/Rooms/controls.dart';
 import '../../widgets/Rooms/AI_sidebar/ai_assistant_sidebar.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class RoomPage extends StatefulWidget {
@@ -31,6 +33,7 @@ class RoomPage extends StatefulWidget {
     this.listener, {
     super.key,
   });
+
 
   @override
   State<StatefulWidget> createState() => _RoomPageState();
@@ -52,6 +55,7 @@ class _RoomPageState extends State<RoomPage> {
   // GlobalKey for AiSummaryCard to access its state
   final GlobalKey _aiSummaryCardKey = GlobalKey();
 
+  bool _allowPop = false;
   @override
   void initState() {
     super.initState();
@@ -389,7 +393,39 @@ class _RoomPageState extends State<RoomPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+        canPop: _allowPop,
+
+        // didPop: 팝 성공 여부, result: 팝될 때 전달된 결과값(여기선 사용 안 함)
+        onPopInvokedWithResult: (bool didPop, dynamic result) async {
+          if (didPop) {
+            return;
+          }
+
+          // [종료 로직 실행]
+
+          // 1. 내가 전송 담당자라면 서버 저장
+          if (_isEldestParticipant) {
+            await _createSessionAndSaveParticipants();
+          }
+
+          // 2. LiveKit 연결 해제
+          await widget.room.disconnect();
+
+          // 3. 팝 허용 후 다시 뒤로가기 실행
+          if (mounted) {
+            setState(() {
+              _allowPop = true;
+            });
+
+            // 현재 프레임 종료 후 실행
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // result를 그대로 전달하거나 null 전달
+              Navigator.of(context).pop(result);
+            });
+          }
+        },
+    child:Scaffold(
       body: Stack(
         children: [
           Row(
@@ -456,6 +492,83 @@ class _RoomPageState extends State<RoomPage> {
           ),
         ],
       ),
+     )
     );
+  }
+  // 1. 내가 방 만든 사람인지 판별하는 로직
+  //이때 내가 제일 먼저 나가야한다 그렇지 않으면 중간에 나간 사람도 기록하는 로직 짜야함
+  bool get _isEldestParticipant {
+    final local = widget.room.localParticipant;
+    if (local == null) return false;
+
+    // joinedAt이 null이면 현재 시간으로 대체
+    final myJoinTime = local.joinedAt ?? DateTime.now();
+
+    for (final remote in widget.room.remoteParticipants.values) {
+      final remoteJoinTime = remote.joinedAt;
+      if (remoteJoinTime == null) continue;
+
+      // 나보다 먼저 온 사람이 있으면 나는 담당자가 아님
+      if (remoteJoinTime.isBefore(myJoinTime)) {
+        return false;
+      }
+
+      // (혹시 시간이 같으면 ID로 순서 정하기)
+      if (remoteJoinTime.isAtSameMomentAs(myJoinTime) &&
+          remote.identity.compareTo(local.identity) < 0) {
+        return false;
+      }
+    }
+    // 나보다 먼저 온 사람이 없으므로 내가 최고참
+    return true;
+  }
+
+  // 2. 세션 생성 및 전송 로직 (RoomPage 클래스 내부로 이동)
+  Future<void> _createSessionAndSaveParticipants() async {
+    // 실제 서버 주소로 변경하세요 (Android 에뮬레이터라면 10.0.2.2, 실제 기기라면 PC IP)
+    const String serverUrl = 'http://localhost:8080/api/sessions';
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? accessToken = prefs.getString('accessToken');
+
+      if (accessToken == null) {
+        print('인증 토큰 없음');
+        return;
+      }
+
+      final List<Participant> allParticipants = [
+        if (widget.room.localParticipant != null) widget.room.localParticipant!,
+        ...widget.room.remoteParticipants.values
+      ];
+
+      final body = {
+        'roomName': widget.room.name,
+        'createdAt': DateTime.now().toIso8601String(),
+        'participants': allParticipants.map((p) => {
+          'identity': p.identity,
+          'name': p.name,
+          'joinedAt': p.joinedAt?.toIso8601String(),
+        }).toList(),
+      };
+
+      print('⏳ 세션 저장 중...');
+      final response = await http.post(
+        Uri.parse(serverUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        print('세션 저장 성공');
+      } else {
+        print('저장 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('전송 중 에러: $e');
+    }
   }
 }

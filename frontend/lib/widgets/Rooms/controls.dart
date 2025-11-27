@@ -215,7 +215,9 @@ class _ControlsWidgetState extends State<ControlsWidget> {
 
   void _onTapDisconnect() async {
     final result = await context.showDisconnectDialog();
-    if (result == true) await widget.room.disconnect();
+    if (result == true)
+    //await widget.room.disconnect();
+    Navigator.of(context).maybePop();
   }
 
   void _onTapUpdateSubscribePermission() async {
@@ -317,15 +319,15 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                           value: device,
                           child: ListTile(
                             leading: (device.deviceId ==
-                                    widget.room.selectedAudioInputDeviceId)
+                                widget.room.selectedAudioInputDeviceId)
                                 ? const Icon(
-                                    Icons.check_box_outlined,
-                                    color: Colors.white,
-                                  )
+                              Icons.check_box_outlined,
+                              color: Colors.white,
+                            )
                                 : const Icon(
-                                    Icons.check_box_outline_blank,
-                                    color: Colors.white,
-                                  ),
+                              Icons.check_box_outline_blank,
+                              color: Colors.white,
+                            ),
                             title: Text(device.label),
                           ),
                           onTap: () => _selectAudioInput(device),
@@ -361,15 +363,15 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                         value: device,
                         child: ListTile(
                           leading: (device.deviceId ==
-                                  widget.room.selectedAudioOutputDeviceId)
+                              widget.room.selectedAudioOutputDeviceId)
                               ? const Icon(
-                                  Icons.check_box_outlined,
-                                  color: Colors.white,
-                                )
+                            Icons.check_box_outlined,
+                            color: Colors.white,
+                          )
                               : const Icon(
-                                  Icons.check_box_outline_blank,
-                                  color: Colors.white,
-                                ),
+                            Icons.check_box_outline_blank,
+                            color: Colors.white,
+                          ),
                           title: Text(device.label),
                         ),
                         onTap: () => _selectAudioOutput(device),
@@ -408,15 +410,15 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                         value: device,
                         child: ListTile(
                           leading: (device.deviceId ==
-                                  widget.room.selectedVideoInputDeviceId)
+                              widget.room.selectedVideoInputDeviceId)
                               ? const Icon(
-                                  Icons.check_box_outlined,
-                                  color: Colors.white,
-                                )
+                            Icons.check_box_outlined,
+                            color: Colors.white,
+                          )
                               : const Icon(
-                                  Icons.check_box_outline_blank,
-                                  color: Colors.white,
-                                ),
+                            Icons.check_box_outline_blank,
+                            color: Colors.white,
+                          ),
                           title: Text(device.label),
                         ),
                         onTap: () => _selectVideoInput(device),
@@ -450,9 +452,11 @@ class _ControlsWidgetState extends State<ControlsWidget> {
             tooltip: 'disconnect',
           ),
           PopupMenuButton<Function>(
-            icon: const Icon(Icons.bug_report), // Using bug_report for test menu
+            icon: const Icon(Icons.bug_report),
+            // Using bug_report for test menu
             tooltip: 'Test Menu',
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<Function>>[
+            itemBuilder: (BuildContext context) =>
+            <PopupMenuEntry<Function>>[
               PopupMenuItem(
                 child: const Text('Unpublish all'),
                 value: _unpublishAll,

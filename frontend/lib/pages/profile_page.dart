@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/user_store.dart';
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -12,19 +14,22 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _nicknameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  late TextEditingController _usernameController;
+  late TextEditingController _nicknameController;
+  late TextEditingController _emailController;
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserProfile();
+    final user = UserStore().user;
+    _usernameController = TextEditingController(text: user?.username ?? '');
+    _nicknameController = TextEditingController(text: user?.nickname ?? '');
+    _emailController = TextEditingController(text: user?.email ?? '');
   }
 
   @override
@@ -46,43 +51,6 @@ class _ProfilePageState extends State<ProfilePage> {
     };
   }
 
-  Future<void> _fetchUserProfile() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final url = Uri.parse('http://localhost:8080/user');
-      final headers = await _getHeaders();
-      final response = await http.get(url, headers: headers);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        _usernameController.text = data['username'] ?? '';
-        _nicknameController.text = data['nickname'] ?? '';
-        _emailController.text = data['email'] ?? '';
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('프로필 로드 실패: ${response.statusCode}')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류 발생: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -95,18 +63,27 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final url = Uri.parse('http://localhost:8080/user');
       final headers = await _getHeaders();
+      final bodyMap = {
+        'username': _usernameController.text, // 보통 username은 변경 불가 API가 많음
+        'nickname': _nicknameController.text,
+        'email': _emailController.text,
+      };
+
+      if (_passwordController.text.isNotEmpty) {
+        bodyMap['password'] = _passwordController.text;
+      }
+
       final response = await http.put(
         url,
         headers: headers,
-        body: jsonEncode({
-          'username': _usernameController.text,
-          'nickname': _nicknameController.text,
-          'email': _emailController.text,
-          if (_passwordController.text.isNotEmpty) 'password': _passwordController.text,
-        }),
+        body: jsonEncode(bodyMap),
       );
 
       if (response.statusCode == 200) {
+        UserStore().updateUser(
+            _nicknameController.text,
+            _emailController.text
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

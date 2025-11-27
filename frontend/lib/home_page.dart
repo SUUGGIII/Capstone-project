@@ -2,11 +2,11 @@
 // 호출: HomeTabPage, MeetingPage, TeamChatPage, SchedulerPage, DocumentsPage, FriendsPage, MorePage 등 여러 페이지 위젯을 IndexedStack 내에서 관리하며 표시함. CreateRoomPage를 호출하여 새 회의 생성 화면으로 이동함. NavigationProvider를 사용하여 내비게이션 상태를 관리함.
 // 호출됨: main.dart 파일에서 LoginPage를 통해 로그인 성공 시 HomePage 위젯 형태로 호출되어 앱의 초기 화면으로 사용됨.
 import 'package:flutter/material.dart';
+import 'package:meeting_app/pages/session_list_page.dart';
 import 'package:provider/provider.dart';
 import 'package:meeting_app/providers/navigation_provider.dart';
 import 'package:meeting_app/pages/home_tab_page.dart';
 import 'package:meeting_app/pages/meeting_page.dart';
-import 'package:meeting_app/pages/team_chat_page.dart';
 import 'package:meeting_app/pages/scheduler_page.dart';
 import 'package:meeting_app/pages/documents_page.dart';
 import 'package:meeting_app/pages/friends_page.dart';
@@ -21,7 +21,7 @@ class HomePage extends StatelessWidget {
   static final List<Widget> _allViews = [
     const HomeTabPage(),      // index 0
     const MeetingPage(),      // index 1
-    const TeamChatPage(),     // index 2
+    const SessionListPage(),     // index 2
     const SchedulerPage(),    // index 3
     const DocumentsPage(),    // index 4
     const FriendsPage(),      // index 5
@@ -31,7 +31,7 @@ class HomePage extends StatelessWidget {
   // 상단 네비게이션 바에 표시될 페이지, 레이블을 _allViews의 인덱스에 매핑
   static final Map<String, int> _navItems = {
     '회의': 1,
-    '팀 채팅': 2,
+    '세션 채팅': 2,
     '일정': 3,
     '문서': 4,
     '친구': 5,

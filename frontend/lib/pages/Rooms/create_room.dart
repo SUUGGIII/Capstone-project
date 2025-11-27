@@ -12,6 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../services/user_store.dart';
+
 class CreateRoomPage extends StatefulWidget {
   const CreateRoomPage({super.key});
 
@@ -58,7 +60,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     }
     _uriCtrl.text = 'wss://stt-bu5ksfvb.livekit.cloud';
     _nameCtrl.text = 'user';
-    _identityCtrl.text = 'user-${DateTime.now().millisecondsSinceEpoch % 1000}';
+    _identityCtrl.text = UserStore().user?.userId.toString() ?? '';
     _metadataCtrl.text = 'MeetingParticipant';
     _roomNameCtrl.text = 'my-team-meeting';
   }
