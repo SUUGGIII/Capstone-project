@@ -31,7 +31,7 @@ class HomePage extends StatelessWidget {
   // 상단 네비게이션 바에 표시될 페이지, 레이블을 _allViews의 인덱스에 매핑
   static final Map<String, int> _navItems = {
     '회의': 1,
-    '세션 채팅': 2,
+    '회의록': 2,
     '일정': 3,
     '문서': 4,
     '친구': 5,

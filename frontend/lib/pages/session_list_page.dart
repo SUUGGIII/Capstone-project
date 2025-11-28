@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/user_store.dart'; // 내 닉네임 확인용
+import '../services/user_store.dart';
 
 class SessionListPage extends StatefulWidget {
   const SessionListPage({super.key});
@@ -12,21 +12,35 @@ class SessionListPage extends StatefulWidget {
 }
 
 class _SessionListPageState extends State<SessionListPage> {
-  // 모델 클래스 대신 Map 리스트를 사용합니다.
   List<dynamic> _sessions = [];
-  bool _isLoading = true;
+  bool _isInitialLoading = true;
   String? _errorMessage;
-
 
   @override
   void initState() {
     super.initState();
-    // 페이지가 로드될 때마다 서버에 요청합니다.
     _fetchMySessions();
   }
 
+  // 버튼 클릭 시 호출될 함수
   Future<void> _fetchMySessions() async {
-    final myUserId = UserStore().user?.userId;
+    // 로딩바를 다시 보여주고 싶다면 주석 해제
+    // setState(() { _isInitialLoading = true; });
+
+    final userStore = UserStore();
+    final myUserId = userStore.user?.userId;
+    final myNickname = userStore.user?.nickname;
+
+    if (myUserId == null || myNickname == null) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = "사용자 정보를 찾을 수 없습니다.";
+          _isInitialLoading = false;
+        });
+      }
+      return;
+    }
+
     final url = Uri.parse('http://localhost:8080/api/sessions/user/$myUserId');
 
     try {
@@ -34,10 +48,12 @@ class _SessionListPageState extends State<SessionListPage> {
       final accessToken = prefs.getString('accessToken');
 
       if (accessToken == null) {
-        setState(() {
-          _errorMessage = "로그인이 필요합니다.";
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = "로그인이 필요합니다.";
+            _isInitialLoading = false;
+          });
+        }
         return;
       }
 
@@ -50,30 +66,40 @@ class _SessionListPageState extends State<SessionListPage> {
       );
 
       if (response.statusCode == 200) {
-        // 모델 변환 과정 없이 바로 JSON 리스트를 저장합니다.
-        setState(() {
-          _sessions = jsonDecode(response.body);
-          _isLoading = false;
-        });
+        final List<dynamic> allSessions = jsonDecode(response.body);
+
+        final filteredSessions = allSessions.where((session) {
+          final participants = session['participantNicknames'] as List<dynamic>? ?? [];
+          return participants.contains(myNickname);
+        }).toList();
+
+        if (mounted) {
+          setState(() {
+            _sessions = filteredSessions;
+            _errorMessage = null;
+            _isInitialLoading = false;
+          });
+        }
       } else {
-        setState(() {
-          _errorMessage = "불러오기 실패: ${response.statusCode}";
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = "불러오기 실패: ${response.statusCode}";
+            _isInitialLoading = false;
+          });
+        }
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = "오류 발생: $e";
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = "오류 발생: $e";
+          _isInitialLoading = false;
+        });
+      }
     }
   }
 
-  // 닉네임 목록(List<dynamic>)에서 내 닉네임을 뺀 문자열 생성
   String _getOtherParticipantsString(List<dynamic> allNicknames) {
     final myNickname = UserStore().user?.nickname;
-
-    // 내 닉네임 제외
     final others = allNicknames.where((name) => name != myNickname).toList();
 
     if (others.isEmpty) {
@@ -90,6 +116,14 @@ class _SessionListPageState extends State<SessionListPage> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,
+        // 새로고침 버튼 (이제 이것이 유일한 갱신 수단입니다)
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black),
+            tooltip: '새로고침',
+            onPressed: _fetchMySessions,
+          ),
+        ],
       ),
       backgroundColor: Colors.grey[100],
       body: _buildBody(),
@@ -97,10 +131,12 @@ class _SessionListPageState extends State<SessionListPage> {
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
+    // 1. 로딩 중
+    if (_isInitialLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // 2. 에러 발생 시
     if (_errorMessage != null) {
       return Center(
         child: Column(
@@ -109,25 +145,29 @@ class _SessionListPageState extends State<SessionListPage> {
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
             Text(_errorMessage!),
-            ElevatedButton(onPressed: _fetchMySessions, child: const Text("다시 시도"))
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchMySessions,
+              child: const Text("다시 시도"),
+            )
           ],
         ),
       );
     }
 
+    // 3. 데이터가 없을 때
     if (_sessions.isEmpty) {
       return const Center(child: Text("참여한 회의가 없습니다."));
     }
 
+    // 4. 데이터 리스트 (RefreshIndicator 제거됨)
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _sessions.length,
       itemBuilder: (context, index) {
-        // JSON 객체(Map)에 바로 접근합니다. ['키이름']
         final session = _sessions[index];
         final sessionName = session['sessionName'] ?? '이름 없음';
         final nicknames = session['participantNicknames'] ?? [];
-
         final otherParticipants = _getOtherParticipantsString(nicknames);
 
         return Card(
@@ -135,9 +175,9 @@ class _SessionListPageState extends State<SessionListPage> {
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: InkWell(
-            onTap: () {
-              // 세션 ID도 Map에서 바로 꺼내서 사용
+            onTap: () async {
               print("세션 클릭 ID: ${session['sessionId']}");
+              // 상세 페이지 이동 로직...
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
