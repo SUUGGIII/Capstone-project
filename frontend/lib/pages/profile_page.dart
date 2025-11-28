@@ -19,9 +19,13 @@ class _ProfilePageState extends State<ProfilePage> {
   late TextEditingController _emailController;
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  late TextEditingController _ageController;
+  late TextEditingController _occupationController;
+  String? _selectedSex; // 성별 선택값
 
   bool _isLoading = false;
   bool _isSaving = false;
+  final List<String> _sexOptions = ['남성', '여성'];
 
   @override
   void initState() {
@@ -30,6 +34,12 @@ class _ProfilePageState extends State<ProfilePage> {
     _usernameController = TextEditingController(text: user?.username ?? '');
     _nicknameController = TextEditingController(text: user?.nickname ?? '');
     _emailController = TextEditingController(text: user?.email ?? '');
+    _ageController = TextEditingController(text: user?.age?.toString() ?? '');
+    _occupationController = TextEditingController(text: user?.occupation ?? '');
+
+    if (user?.sex != null && _sexOptions.contains(user!.sex)) {
+      _selectedSex = user.sex;
+    }
   }
 
   @override
@@ -39,6 +49,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _ageController.dispose();
+    _occupationController.dispose();
     super.dispose();
   }
 
@@ -67,6 +79,9 @@ class _ProfilePageState extends State<ProfilePage> {
         'username': _usernameController.text, // 보통 username은 변경 불가 API가 많음
         'nickname': _nicknameController.text,
         'email': _emailController.text,
+        'age': _ageController.text.isNotEmpty ? int.parse(_ageController.text) : null,
+        'sex': _selectedSex,
+        'occupation': _occupationController.text,
       };
 
       if (_passwordController.text.isNotEmpty) {
@@ -81,8 +96,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (response.statusCode == 200) {
         UserStore().updateUser(
-            _nicknameController.text,
-            _emailController.text
+          nickname: _nicknameController.text,
+          email: _emailController.text,
+          age: _ageController.text.isNotEmpty ? int.parse(_ageController.text) : null,
+          sex: _selectedSex,
+          occupation: _occupationController.text,
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -209,6 +227,44 @@ class _ProfilePageState extends State<ProfilePage> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _ageController,
+                      decoration: const InputDecoration(
+                        labelText: '나이',
+                        hintText: '나이',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 20),
+                    DropdownButtonFormField<String>(
+                      value: _selectedSex,
+                      decoration: const InputDecoration(
+                        labelText: '성별',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _sexOptions.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedSex = newValue;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _occupationController,
+                      decoration: const InputDecoration(
+                        labelText: '직업',
+                        hintText: '직업을 입력해주세요',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     const SizedBox(height: 40),
                     const Divider(),

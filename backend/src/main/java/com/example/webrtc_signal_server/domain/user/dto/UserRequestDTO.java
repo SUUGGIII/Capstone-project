@@ -24,4 +24,7 @@ public class UserRequestDTO {
     private String nickname;
     @Email(groups = {addGroup.class, updateGroup.class})
     private String email;
+    private Integer age;
+    private String sex;
+    private String occupation;
 }

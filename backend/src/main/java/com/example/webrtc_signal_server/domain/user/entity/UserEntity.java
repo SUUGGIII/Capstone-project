@@ -55,10 +55,13 @@ public class UserEntity {
     @Column(name = "email")
     private String email;
 
-    private int age;
+    @Column(name = "age")
+    private Integer age;
 
+    @Column(name = "sex")
     private String sex;
 
+    @Column(name = "occupation")
     private String occupation;
 
     @CreatedDate
@@ -77,6 +80,9 @@ public class UserEntity {
     public void updateUser(UserRequestDTO dto) {
         this.email = dto.getEmail();
         this.nickname = dto.getNickname();
+        this.age = dto.getAge();
+        this.occupation = dto.getOccupation();
+        this.sex = dto.getSex();
     }
 
     public void updatePassword(String encodedPassword) {

@@ -1,4 +1,4 @@
 package com.example.webrtc_signal_server.domain.user.dto;
 
-public record UserResponseDTO(Long id, String username, Boolean social, String nickname, String email, int age, String occupation, String sex) {
+public record UserResponseDTO(Long id, String username, String nickname, String email, Integer age, String sex, String occupation) {
 }
