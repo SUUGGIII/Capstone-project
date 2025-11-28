@@ -77,6 +77,9 @@ public class UserEntity {
     public void updateUser(UserRequestDTO dto) {
         this.email = dto.getEmail();
         this.nickname = dto.getNickname();
+        this.age = dto.getAge();
+        this.occupation = dto.getOccupation();
+        this.sex = dto.getSex();
     }
 
     public void updatePassword(String encodedPassword) {

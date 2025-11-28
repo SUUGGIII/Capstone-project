@@ -8,12 +8,18 @@ class UserProfile {
   String username;
   String nickname;
   String email;
+  int? age;
+  String? sex;
+  String? occupation;
 
   UserProfile({
     required this.userId,
     required this.username,
     required this.nickname,
     required this.email,
+    this.age,
+    this.sex,
+    this.occupation,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -22,6 +28,9 @@ class UserProfile {
       username: json['username'] ?? '',
       nickname: json['nickname'] ?? '',
       email: json['email'] ?? '',
+      age: json['age'],
+      sex: json['sex'],
+      occupation: json['occupation'],
     );
   }
 }
@@ -75,10 +84,19 @@ class UserStore {
   }
 
   // 프로필 수정 시 로컬 데이터도 업데이트
-  void updateUser(String nickname, String email) {
+  void updateUser({
+    required String nickname,
+    required String email,
+    int? age,
+    String? sex,
+    String? occupation,
+  }) {
     if (_user != null) {
       _user!.nickname = nickname;
       _user!.email = email;
+      _user!.age = age;
+      _user!.sex = sex;
+      _user!.occupation = occupation;
     }
   }
 }

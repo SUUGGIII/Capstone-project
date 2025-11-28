@@ -82,7 +82,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
                 .build();
     }
 
-    // 자체 로그인 회원 정보 수정
+    // 자체/소셜 로그인 회원 정보 수정
     @Transactional
     public Long updateUser(UserRequestDTO dto) throws AccessDeniedException {
         // 본인만 수정 가능 검토
@@ -92,7 +92,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         }
 
         //조회
-        UserEntity entity = userRepository.findByUsernameAndIsLockAndIsSocial(dto.getUsername(), false, false)
+        UserEntity entity = userRepository.findByUsernameAndIsLock(dto.getUsername(), false)
                 .orElseThrow(() -> new UsernameNotFoundException(dto.getUsername()));
 
         //회원 정보 수정
