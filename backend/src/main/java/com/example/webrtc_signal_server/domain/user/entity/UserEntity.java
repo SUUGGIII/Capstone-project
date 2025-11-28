@@ -55,6 +55,12 @@ public class UserEntity {
     @Column(name = "email")
     private String email;
 
+    private int age;
+
+    private String sex;
+
+    private String occupation;
+
     @CreatedDate
     @Column(name = "created_date", updatable = false)
     private LocalDateTime createdDate;
