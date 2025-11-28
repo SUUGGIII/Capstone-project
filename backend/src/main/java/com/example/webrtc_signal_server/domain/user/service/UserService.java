@@ -82,7 +82,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
                 .build();
     }
 
-    // 자체/소셜 로그인 회원 정보 수정
+    // 소셜 로그인 회원 정보 수정
     @Transactional
     public Long updateUser(UserRequestDTO dto) throws AccessDeniedException {
         // 본인만 수정 가능 검토
@@ -92,7 +92,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         }
 
         //조회
-        UserEntity entity = userRepository.findByUsernameAndIsLock(dto.getUsername(), false)
+        UserEntity entity = userRepository.findByUsernameAndIsLockAndIsSocial(dto.getUsername(), false, true)
                 .orElseThrow(() -> new UsernameNotFoundException(dto.getUsername()));
 
         //회원 정보 수정
@@ -165,22 +165,10 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
             throw new OAuth2AuthenticationException("지원하지 않는 소셜 로그인입니다.");
         }
 
-        // 데이터베이스 조회 -> 존재하면 업데이트, 없으면 신규 가입
+        // 데이터베이스 조회 -> 존재하면 가만히, 없으면 신규 가입
         Optional<UserEntity> entity = userRepository.findByUsernameAndIsSocial(username, true);
 
-        if (entity.isPresent()) {
-            // role 조회
-            role = entity.get().getRoleType().name();
-
-            // 기존 유저 업데이트
-            UserRequestDTO dto = new UserRequestDTO();
-            dto.setNickname(nickname);
-            dto.setEmail(email);
-            entity.get().updateUser(dto);
-
-            userRepository.save(entity.get());
-
-        } else {
+        if (entity.isEmpty()) {
             // 신규 유저 추가
             UserEntity newUserEntity = UserEntity.builder()
                     .username(username)
@@ -192,7 +180,6 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
                     .nickname(nickname)
                     .email(email)
                     .build();
-
             userRepository.save(newUserEntity);
         }
 
@@ -201,7 +188,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         return new CustomOAuth2User(attributes, authorities, username);
     }
 
-    // 자체/소셜 유저 정보 조회
+    //소셜 유저 정보 조회
     @Transactional(readOnly = true)
     public UserResponseDTO readUser() {
         String username =  SecurityContextHolder.getContext().getAuthentication().getName();
@@ -209,6 +196,6 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         UserEntity entity = userRepository.findByUsernameAndIsLock(username, false)
                 .orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다: " + username));
 
-        return new UserResponseDTO(entity.getId(), username, entity.getIsSocial(), entity.getNickname(), entity.getEmail(), entity.getAge(), entity.getOccupation(), entity.getSex());
+        return new UserResponseDTO(entity.getId(), username,entity.getNickname(), entity.getEmail(), entity.getAge(), entity.getSex(), entity.getOccupation());
     }
 }

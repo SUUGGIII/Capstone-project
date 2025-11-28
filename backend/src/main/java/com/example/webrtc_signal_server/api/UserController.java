@@ -39,13 +39,13 @@ public class UserController {
         return ResponseEntity.status(201).body(responseBody);
     }
 
-    // 유저 정보
+    //소셜 유저 정보
     @GetMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
     public UserResponseDTO userMeApi() {
         return userService.readUser();
     }
 
-    // 유저 수정 (자체 로그인 유저만)
+    // 유저 수정 (소셜 로그인 유저만)
     @PutMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Long> updateUserApi(
             @Validated(UserRequestDTO.updateGroup.class) @RequestBody UserRequestDTO dto

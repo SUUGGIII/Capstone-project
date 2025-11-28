@@ -55,10 +55,13 @@ public class UserEntity {
     @Column(name = "email")
     private String email;
 
-    private int age;
+    @Column(name = "age")
+    private Integer age;
 
+    @Column(name = "sex")
     private String sex;
 
+    @Column(name = "occupation")
     private String occupation;
 
     @CreatedDate
