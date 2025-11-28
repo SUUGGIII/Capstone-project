@@ -318,20 +318,42 @@ class _LoginPageState extends State<LoginPage> {
             ..statusCode = HttpStatus.ok
             ..headers.contentType = ContentType.html
             ..write('''
+            <!DOCTYPE html>
             <html>
+            <head>
+              <meta charset="utf-8">
+              <title>로그인 성공</title>
+              <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding-top: 50px; background-color: #f0f2f5; }
+                .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; width: 90%; }
+                h1 { color: #4CAF50; margin: 0 0 16px; font-size: 24px; }
+                p { color: #65676b; margin: 0 0 24px; line-height: 1.5; }
+                .icon { font-size: 48px; margin-bottom: 20px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="icon">✅</div>
+                <h1>로그인 성공!</h1>
+                <p>인증이 안전하게 완료되었습니다.<br>이 창이 자동으로 닫히지 않으면 수동으로 닫아주세요.</p>
+              </div>
               <script>
                 window.onload = function() {
-                  window.close();
-                  open(location, '_self').close();
+                  // 자동 닫기 시도 (보안 정책에 의해 막힐 수 있음)
+                  setTimeout(function() {
+                    window.close();
+                  }, 1500);
                 };
               </script>
+            </body>
             </html>
-          ''')
-            ..close();
+          ''');
           await request.response.close();
 
           // 💡 5. 서버 중지 및 인증 완료
-          await server.close(force: true);
+          // 응답이 브라우저에 완전히 도달할 시간을 확보하기 위해 잠시 대기
+          await Future.delayed(const Duration(milliseconds: 500));
+          await server.close(); // force: true 제거하여 우아하게 종료
 
           if (receivedRefreshToken != null) {
 

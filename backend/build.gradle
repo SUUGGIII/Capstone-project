@@ -25,8 +25,8 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     //-------------------------------------------------------new-------------------------------------------------------
     //h2 Database 사용
-    runtimeOnly 'com.h2database:h2'
-    //runtimeOnly 'com.mysql:mysql-connector-j'
+    //runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.mysql:mysql-connector-j'
 
     //JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

@@ -18,6 +18,7 @@ import 'package:meeting_app/widgets/Rooms/participant.dart';
 import 'package:meeting_app/widgets/Rooms/participant_info.dart';
 import 'package:meeting_app/utils/utils.dart';
 
+import '../../home_page.dart';
 import '../../widgets/Rooms/controls.dart';
 import '../../widgets/Rooms/AI_sidebar/ai_assistant_sidebar.dart';
 import 'package:http/http.dart' as http;
@@ -29,10 +30,10 @@ class RoomPage extends StatefulWidget {
   final EventsListener<RoomEvent> listener;
 
   const RoomPage(
-    this.room,
-    this.listener, {
-    super.key,
-  });
+      this.room,
+      this.listener, {
+        super.key,
+      });
 
 
   @override
@@ -56,6 +57,8 @@ class _RoomPageState extends State<RoomPage> {
   final GlobalKey _aiSummaryCardKey = GlobalKey();
 
   bool _allowPop = false;
+  bool _isManualExit = false;
+
   @override
   void initState() {
     super.initState();
@@ -98,11 +101,20 @@ class _RoomPageState extends State<RoomPage> {
   /// for more information, see [event types](https://docs.livekit.io/client/events/#events)
   void _setUpListeners() => _listener
     ..on<RoomDisconnectedEvent>((event) async {
+      if (_isManualExit) return;
       if (event.reason != null) {
         print('Room disconnected: reason => ${event.reason}');
       }
       WidgetsBindingCompatible.instance?.addPostFrameCallback(
-          (timeStamp) => Navigator.popUntil(context, (route) => route.isFirst));
+              (timeStamp) => Navigator.popUntil(context, (route) => route.isFirst));
+    })
+    ..on<ParticipantConnectedEvent>((event) {
+      print('Participant connected: ${event.participant.identity}');
+      _sortParticipants();
+    })
+    ..on<ParticipantDisconnectedEvent>((event) {
+      print('Participant disconnected: ${event.participant.identity}');
+      _sortParticipants();
     })
     ..on<ParticipantEvent>((event) {
       // sort participants on many track events as noted in documentation linked above
@@ -114,7 +126,7 @@ class _RoomPageState extends State<RoomPage> {
     ..on<RoomAttemptReconnectEvent>((event) {
       print(
           'Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
-          '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
+              '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
     })
     ..on<LocalTrackSubscribedEvent>((event) {
       print('Local track subscribed: ${event.trackSid}');
@@ -140,7 +152,7 @@ class _RoomPageState extends State<RoomPage> {
       try {
         String decodedString = utf8.decode(event.data);
         Map<String, dynamic> jsonData = jsonDecode(decodedString);
-        
+
         switch (jsonData['type']) {
           case 'VOTE_CREATED':
             setState(() {
@@ -159,15 +171,15 @@ class _RoomPageState extends State<RoomPage> {
             });
             break;
           case 'VOTE_ENDED':
-             setState(() {
+            setState(() {
               _currentVoteProposal = null;
               _currentVoteSession = null;
               _currentVoteResults = VoteResults.fromJson(jsonData);
               _isSidebarVisible = true;
             });
-             break;
+            break;
           case 'RECAP_GENERATED':
-            // Handle recap data from Agent
+          // Handle recap data from Agent
             final recapData = jsonData['data'] as Map<String, dynamic>?;
             if (recapData != null) {
               // Reset loading state and show recap dialog
@@ -235,7 +247,7 @@ class _RoomPageState extends State<RoomPage> {
         agentFound = true;
         continue;
       }
-      
+
       for (var t in participant.videoTrackPublications) {
         if (t.isScreenShare) {
           screenTracks.add(ParticipantTrack(
@@ -248,7 +260,7 @@ class _RoomPageState extends State<RoomPage> {
         }
       }
     }
-    
+
     _isAgentPresent = agentFound;
 
     for (var participant in widget.room.remoteParticipants.values) {
@@ -302,7 +314,7 @@ class _RoomPageState extends State<RoomPage> {
         }
       }
       userMediaTracks.add(
-            ParticipantTrack(participant: localParticipant));
+          ParticipantTrack(participant: localParticipant));
     }
 
     setState(() {
@@ -333,7 +345,7 @@ class _RoomPageState extends State<RoomPage> {
     final voteProposal = _currentVoteProposal;
 
     List<Widget> sidebarWidgets = [];
-    
+
     // Always show AiSummaryCard
     sidebarWidgets.add(Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -403,96 +415,117 @@ class _RoomPageState extends State<RoomPage> {
           }
 
           // [종료 로직 실행]
+          _isManualExit = true;
+          showDialog(
+            context: context,
+            barrierDismissible: false, // 바깥 터치 막기
+            builder: (context) => const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
+          );
 
-          // 1. 내가 전송 담당자라면 서버 저장
-          if (_isEldestParticipant) {
-            await _createSessionAndSaveParticipants();
-          }
+          try {
+            // 2. 내가 전송 담당자라면 서버 저장 (이것만 기다림!)
+            if (_isEldestParticipant) {
+              await _createSessionAndSaveParticipants();
+            }
 
-          // 2. LiveKit 연결 해제
-          await widget.room.disconnect();
+            // ❌ [삭제] await widget.room.disconnect();
+            // 💡 중요: 여기서 disconnect를 호출하지 않습니다.
+            // 화면이 닫히면 dispose()에서 알아서 끊어주므로 검은 화면을 볼 일이 없습니다.
 
-          // 3. 팝 허용 후 다시 뒤로가기 실행
-          if (mounted) {
-            setState(() {
-              _allowPop = true;
-            });
+          } catch (e) {
+            print("종료 중 에러: $e");
+          } finally {
+            // 3. 안전하게 화면 닫기
+            if (mounted) {
+              // (1) 로딩 다이얼로그 닫기
+              Navigator.of(context).pop();
 
-            // 현재 프레임 종료 후 실행
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              // result를 그대로 전달하거나 null 전달
-              Navigator.of(context).pop(result);
-            });
+              // (2) 팝 잠금 해제
+              setState(() {
+                _allowPop = true;
+              });
+
+              // (3) 진짜 화면 닫기 (이전 화면으로 복귀)
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                      (route) => false, // false를 반환하면 이전의 모든 라우트를 제거합니다.
+                );
+              });
+            }
           }
         },
-    child:Scaffold(
-      body: Stack(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        child:Scaffold(
+          body: Stack(
             children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: participantTracks.isNotEmpty
-                          ? Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: GridView.builder(
-                                itemCount: participantTracks.length,
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: _getCrossAxisCount(),
-                                  childAspectRatio: 16 / 9,
-                                ),
-                                itemBuilder: (BuildContext context, int index) {
-                                  return ParticipantWidget.widgetFor(
-                                      participantTracks[index]);
-                                },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: participantTracks.isNotEmpty
+                              ? Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GridView.builder(
+                              itemCount: participantTracks.length,
+                              gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: _getCrossAxisCount(),
+                                childAspectRatio: 16 / 9,
                               ),
-                            )
-                          : Container(),
-                    ),
-                    if (widget.room.localParticipant != null)
-                      SafeArea(
-                        top: false,
-                        child: ControlsWidget(
-                          widget.room,
-                          widget.room.localParticipant!,
-                          onToggleSidebar: _toggleSidebar,
+                              itemBuilder: (BuildContext context, int index) {
+                                return ParticipantWidget.widgetFor(
+                                    participantTracks[index]);
+                              },
+                            ),
+                          )
+                              : Container(),
                         ),
-                      ),
-                  ],
+                        if (widget.room.localParticipant != null)
+                          SafeArea(
+                            top: false,
+                            child: ControlsWidget(
+                              widget.room,
+                              widget.room.localParticipant!,
+                              onToggleSidebar: _toggleSidebar,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (_isSidebarVisible)
+                    AiAssistantSidebar(
+                      children: _buildSidebarWidgets(),
+                    ),
+                ],
+              ),
+              // Debugging: Agent Status Indicator
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: Tooltip(
+                  message: "Agent Status: ${_isAgentPresent ? 'Online' : 'Offline'}",
+                  child: Container(
+                    width: 15,
+                    height: 15,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isAgentPresent ? Colors.green : Colors.red,
+                      boxShadow: const [
+                        BoxShadow(blurRadius: 4, color: Colors.black26)
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              if (_isSidebarVisible)
-                AiAssistantSidebar(
-                  children: _buildSidebarWidgets(),
-                ),
             ],
           ),
-          // Debugging: Agent Status Indicator
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: Tooltip(
-              message: "Agent Status: ${_isAgentPresent ? 'Online' : 'Offline'}",
-              child: Container(
-                width: 15,
-                height: 15,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _isAgentPresent ? Colors.green : Colors.red,
-                  boxShadow: const [
-                    BoxShadow(blurRadius: 4, color: Colors.black26)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-     )
+        )
     );
   }
   // 1. 내가 방 만든 사람인지 판별하는 로직
@@ -536,10 +569,11 @@ class _RoomPageState extends State<RoomPage> {
         print('인증 토큰 없음');
         return;
       }
-
       final List<Participant> allParticipants = [
         if (widget.room.localParticipant != null) widget.room.localParticipant!,
-        ...widget.room.remoteParticipants.values
+        ...widget.room.remoteParticipants.values.where(
+                (p) => !p.identity.toLowerCase().contains('agent')
+        )
       ];
 
       final body = {

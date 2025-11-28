@@ -16,16 +16,22 @@ abstract class ParticipantWidget extends StatefulWidget {
   // Convenience method to return relevant widget for participant
   static ParticipantWidget widgetFor(ParticipantTrack participantTrack,
       {bool showStatsLayer = false}) {
+    // Ensure we have a unique key for the widget to prevent unnecessary re-builds/disposals
+    // when the list is reordered (e.g. due to speaking status).
+    final key = ValueKey('${participantTrack.participant.identity}_${participantTrack.type.name}');
+
     if (participantTrack.participant is LocalParticipant) {
       return LocalParticipantWidget(
           participantTrack.participant as LocalParticipant,
           participantTrack.type,
-          showStatsLayer);
+          showStatsLayer,
+          key: key);
     } else if (participantTrack.participant is RemoteParticipant) {
       return RemoteParticipantWidget(
           participantTrack.participant as RemoteParticipant,
           participantTrack.type,
-          showStatsLayer);
+          showStatsLayer,
+          key: key);
     }
     throw UnimplementedError('Unknown participant type');
   }
