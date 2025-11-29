@@ -59,9 +59,20 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
       _checkPermissions();
     }
     _uriCtrl.text = 'wss://stt-bu5ksfvb.livekit.cloud';
-    _nameCtrl.text = 'user';
-    _identityCtrl.text = UserStore().user?.userId.toString() ?? '';
-    _metadataCtrl.text = 'MeetingParticipant';
+    final user = UserStore().user;
+    _nameCtrl.text = user?.nickname ?? 'user';
+    _identityCtrl.text = user?.userId.toString() ?? '';
+    
+    if (user != null) {
+      final metadataMap = {
+        'age': user.age,
+        'sex': user.sex,
+        'occupation': user.occupation,
+      };
+      _metadataCtrl.text = jsonEncode(metadataMap);
+    } else {
+      _metadataCtrl.text = '{}';
+    }
     _roomNameCtrl.text = 'my-team-meeting';
   }
 
