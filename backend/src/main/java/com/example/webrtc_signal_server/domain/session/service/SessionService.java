@@ -23,6 +23,7 @@ public class SessionService {
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
     private final SessionParticipantRepository sessionParticipantRepository;
+    private final com.example.webrtc_signal_server.global.service.S3Service s3Service;
 
     @Transactional
     public Long createSession(SessionCreateRequestDTO requestDto) {
@@ -72,7 +73,32 @@ public class SessionService {
                     .sessionId(session.getId())
                     .sessionName(session.getName())
                     .participantNicknames(nicknames)
+                    .status(session.getStatus().name())
                     .build();
         }).collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
+    public String getSessionStatus(Long sessionId) {
+        SessionEntity session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
+        return session.getStatus().name();
+    }
+
+    @Transactional
+    public void updateSessionStatusByName(String roomName, com.example.webrtc_signal_server.domain.session.entity.SessionStatus status) {
+        SessionEntity session = sessionRepository.findByName(roomName)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found with name: " + roomName));
+        session.updateStatus(status);
+    }
+
+    public String getSessionRecap(Long sessionId) {
+        SessionEntity session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
+        
+        String roomName = session.getName();
+        String key = s3Service.findLatestRecapFile(roomName);
+        return s3Service.getFileContent(key);
     }
 }

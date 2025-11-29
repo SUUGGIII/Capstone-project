@@ -118,6 +118,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/jwt/exchange", "/jwt/refresh").permitAll()
                 .requestMatchers(HttpMethod.POST, "/user/exist", "/user", "/api/votes/**").permitAll()
+                .requestMatchers(HttpMethod.PATCH, "/api/sessions/status").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/sessions/*/status").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/sessions/*/recap").permitAll()
                 .requestMatchers(HttpMethod.GET, "/user").hasRole(UserRoleType.USER.name())
                 .requestMatchers(HttpMethod.PUT, "/user").hasRole(UserRoleType.USER.name())
                 .requestMatchers(HttpMethod.DELETE, "/user").hasRole(UserRoleType.USER.name())

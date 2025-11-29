@@ -15,4 +15,5 @@ public class SessionSummaryResponseDTO {
     private Long sessionId;
     private String sessionName;
     private List<String> participantNicknames; // 세션에 참여 중인 사람들의 닉네임 목록
+    private String status;
 }
