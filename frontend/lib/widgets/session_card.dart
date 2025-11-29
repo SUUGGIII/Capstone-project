@@ -3,6 +3,7 @@ import '../services/user_store.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../pages/summarize_page.dart';
 
 class SessionCard extends StatefulWidget {
   final int sessionId;
@@ -86,8 +87,34 @@ class _SessionCardState extends State<SessionCard> {
         });
       }
     } else if (currentStatus == "COMPLETED") {
-      print("Open S3 JSON for session: ${widget.sessionName}");
-      // TODO: S3 JSON 파일 가져와서 보여주기
+      try {
+        final url = Uri.parse('http://localhost:8080/api/sessions/${widget.sessionId}/recap');
+        final response = await http.get(url);
+
+        if (!mounted) return;
+
+        if (response.statusCode == 200) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SummarizePage(
+                sessionName: widget.sessionName,
+                content: response.body,
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("회의록을 불러오는데 실패했습니다: ${response.statusCode}")),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("오류 발생: $e")),
+          );
+        }
+      }
     }
   }
 

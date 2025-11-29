@@ -43,4 +43,10 @@ public class SessionController {
         String status = sessionService.getSessionStatus(sessionId);
         return ResponseEntity.ok(status);
     }
+
+    @GetMapping("/{sessionId}/recap")
+    public ResponseEntity<String> getSessionRecap(@PathVariable Long sessionId) {
+        String recap = sessionService.getSessionRecap(sessionId);
+        return ResponseEntity.ok(recap);
+    }
 }
