@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/user_store.dart';
 
+import '../widgets/session_card.dart';
+
 class SessionListPage extends StatefulWidget {
   const SessionListPage({super.key});
 
@@ -98,16 +100,6 @@ class _SessionListPageState extends State<SessionListPage> {
     }
   }
 
-  String _getOtherParticipantsString(List<dynamic> allNicknames) {
-    final myNickname = UserStore().user?.nickname;
-    final others = allNicknames.where((name) => name != myNickname).toList();
-
-    if (others.isEmpty) {
-      return "나 혼자 참여 중";
-    }
-    return others.join(", ");
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,54 +158,20 @@ class _SessionListPageState extends State<SessionListPage> {
       itemCount: _sessions.length,
       itemBuilder: (context, index) {
         final session = _sessions[index];
+        final sessionId = session['sessionId']; // ID 가져오기
         final sessionName = session['sessionName'] ?? '이름 없음';
         final nicknames = session['participantNicknames'] ?? [];
-        final otherParticipants = _getOtherParticipantsString(nicknames);
+        final status = session['status'] ?? 'BEFORE_START';
 
-        return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: InkWell(
-            onTap: () async {
-              print("세션 클릭 ID: ${session['sessionId']}");
-              // 상세 페이지 이동 로직...
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    sessionName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.people, size: 16, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          otherParticipants,
-                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+        return SessionCard(
+          sessionId: sessionId,
+          sessionName: sessionName,
+          participantNicknames: nicknames,
+          initialStatus: status,
+          onTap: () async {
+            print("세션 클릭 ID: ${session['sessionId']}");
+            // 상세 페이지 이동 로직...
+          },
         );
       },
     );

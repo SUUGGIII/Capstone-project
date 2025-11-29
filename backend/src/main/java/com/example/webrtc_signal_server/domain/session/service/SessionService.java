@@ -72,16 +72,23 @@ public class SessionService {
                     .sessionId(session.getId())
                     .sessionName(session.getName())
                     .participantNicknames(nicknames)
+                    .status(session.getStatus().name())
                     .build();
         }).collect(Collectors.toList());
     }
-        }).collect(Collectors.toList());
+
+
+    @Transactional(readOnly = true)
+    public String getSessionStatus(Long sessionId) {
+        SessionEntity session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
+        return session.getStatus().name();
     }
 
     @Transactional
-    public void updateSessionStatus(Long sessionId, com.example.webrtc_signal_server.domain.session.entity.SessionStatus status) {
-        SessionEntity session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
+    public void updateSessionStatusByName(String roomName, com.example.webrtc_signal_server.domain.session.entity.SessionStatus status) {
+        SessionEntity session = sessionRepository.findByName(roomName)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found with name: " + roomName));
         session.updateStatus(status);
     }
 }

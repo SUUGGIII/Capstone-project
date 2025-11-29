@@ -7,5 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class SessionStatusUpdateRequestDTO {
+    private String roomName;
     private SessionStatus status;
 }

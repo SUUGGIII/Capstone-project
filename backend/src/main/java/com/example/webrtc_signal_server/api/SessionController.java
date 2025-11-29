@@ -30,12 +30,17 @@ public class SessionController {
         return ResponseEntity.ok(sessions);
     }
 
-    @PatchMapping("/{sessionId}/status")
+    @PatchMapping("/status")
     public ResponseEntity<String> updateSessionStatus(
-            @PathVariable Long sessionId,
             @RequestBody com.example.webrtc_signal_server.domain.session.dto.SessionStatusUpdateRequestDTO requestDto
     ) {
-        sessionService.updateSessionStatus(sessionId, requestDto.getStatus());
+        sessionService.updateSessionStatusByName(requestDto.getRoomName(), requestDto.getStatus());
         return ResponseEntity.ok("Session status updated to " + requestDto.getStatus());
+    }
+
+    @GetMapping("/{sessionId}/status")
+    public ResponseEntity<String> getSessionStatus(@PathVariable Long sessionId) {
+        String status = sessionService.getSessionStatus(sessionId);
+        return ResponseEntity.ok(status);
     }
 }
