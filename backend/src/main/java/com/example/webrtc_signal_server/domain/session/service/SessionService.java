@@ -75,4 +75,13 @@ public class SessionService {
                     .build();
         }).collect(Collectors.toList());
     }
+        }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updateSessionStatus(Long sessionId, com.example.webrtc_signal_server.domain.session.entity.SessionStatus status) {
+        SessionEntity session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
+        session.updateStatus(status);
+    }
 }

@@ -29,4 +29,13 @@ public class SessionController {
         List<SessionSummaryResponseDTO> sessions = sessionService.getMySessions(userId);
         return ResponseEntity.ok(sessions);
     }
+
+    @PatchMapping("/{sessionId}/status")
+    public ResponseEntity<String> updateSessionStatus(
+            @PathVariable Long sessionId,
+            @RequestBody com.example.webrtc_signal_server.domain.session.dto.SessionStatusUpdateRequestDTO requestDto
+    ) {
+        sessionService.updateSessionStatus(sessionId, requestDto.getStatus());
+        return ResponseEntity.ok("Session status updated to " + requestDto.getStatus());
+    }
 }

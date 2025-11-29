@@ -23,6 +23,11 @@ public class SessionEntity {
 
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private SessionStatus status = SessionStatus.BEFORE_START;
+
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
     private List<SessionParticipantEntity> participants = new ArrayList<>();
 
@@ -41,6 +46,10 @@ public class SessionEntity {
     public void addBoard(BoardEntity board) {
         this.boards.add(board);
         board.associateSession(this);
+    }
+
+    public void updateStatus(SessionStatus status) {
+        this.status = status;
     }
 
 }
