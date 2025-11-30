@@ -52,7 +52,6 @@ class HomePage extends StatelessWidget {
               onTap: () => navProvider.setSelectedIndex(0), // HomeTabPage로 네비게이션
               child: Row(
                 children: [
-                  Image.asset('assets/zoom_logo.png', height: 24),
                   const SizedBox(width: 8),
                   Text(
                     'MeetingApp',

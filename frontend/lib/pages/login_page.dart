@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/zoom_logo.png', height: 50),
+
               const SizedBox(height: 12),
               Text(
                 'MeetingApp',
