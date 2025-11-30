@@ -157,6 +157,11 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildSocialLoginButton(
+                    'Naver',
+                    Icons.vpn_key,
+                    onPressed: () => handleSocialLogin("naver"),
+                  ),
+                  _buildSocialLoginButton(
                     'Google',
                     Icons.g_mobiledata,
                     onPressed: () => handleSocialLogin("google"),

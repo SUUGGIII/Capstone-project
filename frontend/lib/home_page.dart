@@ -30,7 +30,7 @@ class HomePage extends StatelessWidget {
 
   // 상단 네비게이션 바에 표시될 페이지, 레이블을 _allViews의 인덱스에 매핑
   static final Map<String, int> _navItems = {
-    '회의': 1,
+    '홈': 0,
     '회의록': 2,
     '일정': 3,
     '문서': 4,
@@ -122,49 +122,9 @@ class HomePage extends StatelessWidget {
               const SizedBox(width: 8),
             ],
           ),
-          body: Row(
-            children: [
-              Container(
-                width: 200,
-                color: Colors.grey[50],
-                padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-                child: Column(
-                  children: [
-                    _buildSidebarButton(
-                      icon: Icons.videocam,
-                      label: '새 회의',
-                      iconColor: Colors.orange,
-                      backgroundColor: Colors.orange[100],
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateRoomPage())),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSidebarButton(
-                      icon: Icons.add_box,
-                      label: '참가',
-                      iconColor: Colors.blue,
-                      backgroundColor: Colors.blue[100],
-                      onPressed: () => navProvider.setSelectedIndex(1), // MeetingPage로 이동
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSidebarButton(
-                      icon: Icons.calendar_today,
-                      label: '예약',
-                      iconColor: Colors.blue,
-                      backgroundColor: Colors.blue[100],
-                      onPressed: () => navProvider.setSelectedIndex(3), // SchedulerPage로 이동
-                    ),
-                    const SizedBox(height: 16),
-                    const Spacer(),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: IndexedStack(
-                  index: navProvider.selectedIndex,
-                  children: _allViews,
-                ),
-              ),
-            ],
+          body: IndexedStack(
+            index: navProvider.selectedIndex,
+            children: _allViews,
           ),
         );
       },
@@ -180,38 +140,6 @@ class HomePage extends StatelessWidget {
           color: navProvider.selectedIndex == index ? Colors.blue[700] : Colors.black87,
           fontSize: 16,
           fontWeight: navProvider.selectedIndex == index ? FontWeight.bold : FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSidebarButton({
-    required IconData icon,
-    required String label,
-    required Color iconColor,
-    required Color? backgroundColor,
-    required VoidCallback onPressed,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: iconColor, size: 36),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(color: iconColor, fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ],
         ),
       ),
     );
