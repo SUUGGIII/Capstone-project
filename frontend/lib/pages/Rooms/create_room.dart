@@ -58,7 +58,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     if (lkPlatformIs(PlatformType.android)) {
       _checkPermissions();
     }
-    _uriCtrl.text = 'wss://stt-bu5ksfvb.livekit.cloud';
+    _uriCtrl.text = 'ws://59.187.251.201:7880';
     final user = UserStore().user;
     _nameCtrl.text = user?.nickname ?? 'user';
     _identityCtrl.text = user?.userId.toString() ?? '';
@@ -109,12 +109,6 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
 
   Future<void> _readPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    _uriCtrl.text = const bool.hasEnvironment('URL')
-        ? const String.fromEnvironment('URL')
-        : prefs.getString(_storeKeyUri) ?? '';
-    _tokenCtrl.text = const bool.hasEnvironment('TOKEN')
-        ? const String.fromEnvironment('TOKEN')
-        : prefs.getString(_storeKeyToken) ?? '';
     _sharedKeyCtrl.text = const bool.hasEnvironment('E2EEKEY')
         ? const String.fromEnvironment('E2EEKEY')
         : prefs.getString(_storeKeySharedKey) ?? '';
@@ -129,8 +123,6 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
 
   Future<void> _writePrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_storeKeyUri, _uriCtrl.text);
-    await prefs.setString(_storeKeyToken, _tokenCtrl.text);
     await prefs.setString(_storeKeySharedKey, _sharedKeyCtrl.text);
     await prefs.setBool(_storeKeySimulcast, _simulcast);
     await prefs.setBool(_storeKeyAdaptiveStream, _adaptiveStream);
@@ -196,6 +188,15 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
       setState(() {
         _busy = true;
       });
+      
+      // 토큰 생성 (Connect 버튼 누를 때 작동)
+      await _fetchLiveKitToken(ctx);
+      
+      if (_tokenCtrl.text.isEmpty) {
+        // 토큰 발급 실패 시 중단 (에러 메시지는 _fetchLiveKitToken에서 처리됨)
+        return;
+      }
+
       await _writePrefs();
       print('Connecting with url: ${_uriCtrl.text}, '
           'token: ${_tokenCtrl.text}...');
@@ -298,219 +299,73 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 50),
-                child: Image.asset(
-                  'assets/zoom_logo.png',
-                  height: 100,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: LKTextField(
-                  label: 'Name(회원 정보, 입력가능한 칸)',
-                  ctrl: _nameCtrl,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: LKTextField(
-                  label: 'Identity(USERS의 USER_ID, DB꺼(자동입력 -> 추후 칸 삭제))',
-                  ctrl: _identityCtrl,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: LKTextField(
-                  label: 'metadata(직책, 뭐 방장 이런거?, 입력가능한 칸)',
-                  ctrl: _metadataCtrl,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: LKTextField(
-                  label: 'RoomName(회의실별 고유값)',
-                  ctrl: _roomNameCtrl,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: ElevatedButton(
-                  onPressed: _busy ? null : () => _fetchLiveKitToken(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueGrey,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              Center(
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_busy)
-                        const Padding(
-                          padding: EdgeInsets.only(right: 10),
-                          child: SizedBox(
-                            height: 15,
-                            width: 15,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Join Meeting',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        LKTextField(
+                          label: 'Name',
+                          ctrl: _nameCtrl,
+                        ),
+                        const SizedBox(height: 24),
+                        LKTextField(
+                          label: 'RoomName',
+                          ctrl: _roomNameCtrl,
+                        ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _busy ? null : () => _connect(context),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (_busy)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 12),
+                                    child: SizedBox(
+                                      height: 16,
+                                      width: 16,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                                const Text(
+                                  'CONNECT',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      const Text(
-                        'GET LIVEKIT TOKEN',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: LKTextField(
-                  label: 'LiveKit Server URL (ws://...)(모든 회의실, 참가자 고정값 -> 추후 삭제)',
-                  ctrl: _uriCtrl,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: LKTextField(
-                  label: 'Access Token (JWT)(Name, Identity, Metadata ,RoomName으로 생성)',
-                  ctrl: _tokenCtrl,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: LKTextField(
-                  label: 'Shared Key (for E2EE)(전송 내용 암호화용 비밀번호)(사용자가 지정 및 회의 참자가와 직접 공유해서 입력해야함)',
-                  ctrl: _sharedKeyCtrl,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('E2EE'),
-                    Switch(
-                      value: _e2ee,
-                      onChanged: (value) => _setE2EE(value),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Simulcast'),
-                    Switch(
-                      value: _simulcast,
-                      onChanged: (value) => _setSimulcast(value),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Adaptive Stream'),
-                    Switch(
-                      value: _adaptiveStream,
-                      onChanged: (value) => _setAdaptiveStream(value),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Dynacast'),
-                    Switch(
-                      value: _dynacast,
-                      onChanged: (value) => _setDynacast(value),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(bottom: _multiCodec ? 5 : 25),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Multi Codec'),
-                    Switch(
-                      value: _multiCodec,
-                      onChanged: (value) => _setMultiCodec(value),
-                    ),
-                  ],
-                ),
-              ),
-              if (_multiCodec)
-                Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Preferred Codec:'),
-                          DropdownButton<String>(
-                            value: _preferredCodec,
-                            icon: const Icon(
-                              Icons.arrow_drop_down,
-                              color: Colors.blue,
-                            ),
-                            elevation: 16,
-                            style: const TextStyle(color: Colors.blue),
-                            underline: Container(
-                              height: 2,
-                              color: Colors.blueAccent,
-                            ),
-                            onChanged: (String? value) {
-                              setState(() {
-                                _preferredCodec = value!;
-                              });
-                            },
-                            items: [
-                              'Preferred Codec',
-                              'AV1',
-                              'VP9',
-                              'VP8',
-                              'H264',
-                              'H265'
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                          )
-                        ])),
-              ElevatedButton(
-                onPressed: _busy ? null : () => _connect(context),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_busy)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 10),
-                        child: SizedBox(
-                          height: 15,
-                          width: 15,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        ),
-                      ),
-                    const Text('CONNECT'),
-                  ],
                 ),
               ),
             ],
