@@ -7,9 +7,13 @@ import 'package:meeting_app/providers/navigation_provider.dart';
 import 'package:meeting_app/pages/login_page.dart';
 import 'package:meeting_app/theme/theme.dart';
 import 'package:meeting_app/utils/navigator.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
+  
   runApp(
     ChangeNotifierProvider(
       create: (context) => NavigationProvider(),
