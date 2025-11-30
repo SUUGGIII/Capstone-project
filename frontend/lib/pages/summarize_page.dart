@@ -20,6 +20,8 @@ class _SummarizePageState extends State<SummarizePage> {
   SummaryResponse? _summary;
   String? _errorMessage;
   bool _showParticipants = false;
+  bool _showDecisions = true;
+  bool _showActionItems = true;
 
   @override
   void initState() {
@@ -67,117 +69,124 @@ class _SummarizePageState extends State<SummarizePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(summary),
+          _buildBasicInfoCard(summary),
           const SizedBox(height: 24),
-          _buildOverallSummary(summary.finalSummary),
-          const SizedBox(height: 24),
-          if (summary.finalSummary.decisions.isNotEmpty) ...[
-            _buildGlobalDecisions(summary.finalSummary.decisions),
-            const SizedBox(height: 24),
-          ],
-          if (summary.finalSummary.actionItems.isNotEmpty) ...[
-            _buildGlobalActionItems(summary.finalSummary.actionItems),
-            const SizedBox(height: 24),
-          ],
           _buildTopicsList(summary.finalSummary.topics),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(SummaryResponse summary) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade100),
+  Widget _buildBasicInfoCard(SummaryResponse summary) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(summary),
+            const Divider(height: 32),
+            _buildOverallSummary(summary.finalSummary),
+            if (summary.finalSummary.decisions.isNotEmpty) ...[
+              const Divider(height: 32),
+              _buildGlobalDecisions(summary.finalSummary.decisions),
+            ],
+            if (summary.finalSummary.actionItems.isNotEmpty) ...[
+              const Divider(height: 32),
+              _buildGlobalActionItems(summary.finalSummary.actionItems),
+            ],
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            summary.finalSummary.mainTopic,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.blueAccent,
+    );
+  }
+
+  Widget _buildHeader(SummaryResponse summary) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          summary.finalSummary.mainTopic,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.blueAccent,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: Colors.blue.shade100),
+          ),
+          child: Text(
+            summary.finalSummary.domain,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.blue.shade700,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.blue.shade200),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+            const SizedBox(width: 4),
+            Text(
+              summary.metadata.date,
+              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
             ),
-            child: Text(
-              summary.finalSummary.domain,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.blue.shade700,
-                fontWeight: FontWeight.w600,
-              ),
+            const SizedBox(width: 16),
+            Icon(Icons.people, size: 14, color: Colors.grey[600]),
+            const SizedBox(width: 4),
+            Text(
+              "${summary.metadata.participantsNum}명",
+              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
-              const SizedBox(width: 4),
-              Text(
-                summary.metadata.date,
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-              ),
-              const SizedBox(width: 16),
-              Icon(Icons.people, size: 14, color: Colors.grey[600]),
-              const SizedBox(width: 4),
-              Text(
-                "${summary.metadata.participantsNum}명",
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-              ),
-              const SizedBox(width: 4),
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    _showParticipants = !_showParticipants;
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Icon(
-                    _showParticipants ? Icons.expand_less : Icons.expand_more,
-                    size: 20,
-                    color: Colors.grey[600],
-                  ),
+            const SizedBox(width: 4),
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _showParticipants = !_showParticipants;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Icon(
+                  _showParticipants ? Icons.expand_less : Icons.expand_more,
+                  size: 20,
+                  color: Colors.grey[600],
                 ),
               ),
-            ],
-          ),
-          if (_showParticipants)
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                children: summary.speakers
-                    .map((s) => Chip(
-                          label: Text(s.name,
-                              style: const TextStyle(fontSize: 12)),
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: Colors.white,
-                          side: BorderSide(color: Colors.grey.shade300),
-                          padding: EdgeInsets.zero,
-                          labelPadding:
-                              const EdgeInsets.symmetric(horizontal: 8),
-                        ))
-                    .toList(),
-              ),
             ),
-        ],
-      ),
+          ],
+        ),
+        if (_showParticipants)
+          Padding(
+            padding: const EdgeInsets.only(top: 12.0),
+            child: Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: summary.speakers
+                  .map((s) => Chip(
+                        label: Text(s.name,
+                            style: const TextStyle(fontSize: 12)),
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: Colors.white,
+                        side: BorderSide(color: Colors.grey.shade300),
+                        padding: EdgeInsets.zero,
+                        labelPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
+                      ))
+                  .toList(),
+            ),
+          ),
+      ],
     );
   }
 
@@ -187,7 +196,7 @@ class _SummarizePageState extends State<SummarizePage> {
       children: [
         const Text(
           "전체 요약",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
@@ -202,58 +211,119 @@ class _SummarizePageState extends State<SummarizePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "결정 사항",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "결정 사항 (${decisions.length})",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: Icon(
+                  _showDecisions ? Icons.expand_less : Icons.expand_more),
+              onPressed: () {
+                setState(() {
+                  _showDecisions = !_showDecisions;
+                });
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        ...decisions.map((d) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.check_circle_outline,
-                      color: Colors.green, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      d.content,
-                      style: const TextStyle(fontSize: 15),
+        if (_showDecisions) ...[
+          const SizedBox(height: 8),
+          ...decisions.map((d) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.check_circle_outline,
+                        color: Colors.green, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        d.content,
+                        style: const TextStyle(fontSize: 15),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            )),
+                  ],
+                ),
+              )),
+        ],
       ],
     );
   }
 
-  Widget _buildGlobalActionItems(List<String> actionItems) {
+  Widget _buildGlobalActionItems(List<ActionItem> actionItems) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Action Items",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Action Items (${actionItems.length})",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: Icon(
+                  _showActionItems ? Icons.expand_less : Icons.expand_more),
+              onPressed: () {
+                setState(() {
+                  _showActionItems = !_showActionItems;
+                });
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        ...actionItems.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.task_alt, color: Colors.orange, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: const TextStyle(fontSize: 15),
+        if (_showActionItems) ...[
+          const SizedBox(height: 8),
+          ...actionItems.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.task_alt, color: Colors.orange, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.task,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              _buildTag("담당자: ${item.assignee}", Colors.grey),
+                              _buildTag("기한: ${item.dueDate}", Colors.redAccent),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            )),
+                  ],
+                ),
+              )),
+        ],
       ],
+    );
+  }
+
+  Widget _buildTag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 11, color: color),
+      ),
     );
   }
 
@@ -261,17 +331,31 @@ class _SummarizePageState extends State<SummarizePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "상세 토픽",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Text(
+          "상세 토픽 (${topics.length})",
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ...topics.map((topic) => _buildTopicCard(topic)),
+        ...topics.map((topic) => _TopicCard(topic: topic)),
       ],
     );
   }
+}
 
-  Widget _buildTopicCard(Topic topic) {
+class _TopicCard extends StatefulWidget {
+  final Topic topic;
+
+  const _TopicCard({required this.topic});
+
+  @override
+  State<_TopicCard> createState() => _TopicCardState();
+}
+
+class _TopicCardState extends State<_TopicCard> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -285,23 +369,43 @@ class _SummarizePageState extends State<SummarizePage> {
               children: [
                 Expanded(
                   child: Text(
-                    topic.subTopic,
+                    widget.topic.subTopic,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                _buildTypeBadge(topic.type),
+                _buildTypeBadge(widget.topic.type),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              topic.shortSummary,
+              widget.topic.shortSummary,
               style: TextStyle(fontSize: 14, color: Colors.grey[700]),
             ),
-            const Divider(height: 24),
-            _buildTopicDetails(topic),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                },
+                icon: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
+                label: Text(_isExpanded ? "접기" : "상세 보기"),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+            if (_isExpanded) ...[
+              const Divider(height: 24),
+              _buildTopicDetails(widget.topic),
+            ],
           ],
         ),
       ),

@@ -54,7 +54,7 @@ class FinalSummary {
   final String domain;
   final String summary;
   final List<Decision> decisions;
-  final List<String> actionItems;
+  final List<ActionItem> actionItems;
   final List<Topic> topics;
 
   FinalSummary({
@@ -74,15 +74,47 @@ class FinalSummary {
       decisions: (json['decisions'] as List?)
               ?.map((e) => Decision.fromJson(e))
               .toList() ??
-          [],
+          <Decision>[],
       actionItems: (json['action_items'] as List?)
-              ?.map((e) => e.toString())
+              ?.map((e) => ActionItem.fromString(e.toString()))
               .toList() ??
-          [],
+          <ActionItem>[],
       topics: (json['topics'] as List?)
               ?.map((e) => Topic.fromJson(e))
               .toList() ??
-          [],
+          <Topic>[],
+    );
+  }
+}
+
+class ActionItem {
+  final String task;
+  final String assignee;
+  final String dueDate;
+  final String relatedSubTopicId;
+
+  ActionItem({
+    required this.task,
+    required this.assignee,
+    required this.dueDate,
+    required this.relatedSubTopicId,
+  });
+
+  factory ActionItem.fromString(String raw) {
+    String content = raw.trim();
+    if (content.startsWith('{')) content = content.substring(1);
+    if (content.endsWith('}')) content = content.substring(0, content.length - 1);
+
+    final taskMatch = RegExp(r'task:\s*(.*?),\s*assignee:').firstMatch(content);
+    final assigneeMatch = RegExp(r'assignee:\s*(.*?),\s*due_date:').firstMatch(content);
+    final dueDateMatch = RegExp(r'due_date:\s*(.*?),\s*related_sub_topic_id:').firstMatch(content);
+    final relatedIdMatch = RegExp(r'related_sub_topic_id:\s*(.*)').firstMatch(content);
+
+    return ActionItem(
+      task: taskMatch?.group(1)?.trim() ?? content,
+      assignee: assigneeMatch?.group(1)?.trim() ?? '',
+      dueDate: dueDateMatch?.group(1)?.trim() ?? '',
+      relatedSubTopicId: relatedIdMatch?.group(1)?.trim() ?? '',
     );
   }
 }
@@ -111,7 +143,7 @@ class Topic {
   final String endId;
   final String subTopicId;
   final String shortSummary;
-  final dynamic details; // Dynamic type to handle different structures
+  final dynamic details;
 
   Topic({
     required this.subTopic,
@@ -155,7 +187,7 @@ class Topic {
           parsedDetails = BrainstormingDetails.fromJson(detailsJson);
           break;
         default:
-          parsedDetails = detailsJson; // Fallback to raw map
+          parsedDetails = detailsJson;
       }
     }
 
@@ -330,8 +362,6 @@ class ProgressItem {
   }
 }
 
-// Inferred Types
-
 class DecisionMakingDetails {
   final String decisionTopic;
   final List<String> optionsConsidered;
@@ -378,7 +408,6 @@ class BrainstormingDetails {
   }
 }
 
-// Helper
 List<String> _toList(dynamic json) {
   if (json is List) {
     return json.map((e) => e.toString()).toList();
