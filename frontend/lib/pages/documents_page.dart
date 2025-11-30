@@ -8,285 +8,176 @@ class DocumentsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 250,
-          color: Colors.grey[100],
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '문서',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: '검색',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.notifications_none),
-                title: const Text('알림'),
-                trailing: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text('3', style: TextStyle(color: Colors.white, fontSize: 12)),
-                ),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.access_time),
-                title: const Text('최근'),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.folder_open),
-                title: const Text('내 문서'),
-                subtitle: const Text('새로운 기능'),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.share),
-                title: const Text('나에게 공유됨'),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.bookmark_border),
-                title: const Text('별표 표시됨'),
-                onTap: () {},
-              ),
-              const Spacer(),
-              const Divider(),
-              const Text(
-                '공유 폴더',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '공유 폴더는 팀의 문서를 원활하게 공유하고 협업할 수 있는 공간입니다.',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 8),
-              TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('새 공유 폴더 만들기'),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.centerLeft,
-                ),
-              ),
-            ],
+    return Scaffold(
+      backgroundColor: Colors.white,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('파일 업로드 기능은 준비 중입니다.')),
+          );
+        },
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.upload_file, color: Colors.white),
+      ),
+      body: Column(
+        children: [
+          _buildHeader(context),
+          _buildFilterChips(),
+          Expanded(
+            child: _buildDocumentList(),
           ),
-        ),
-        Expanded(
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: '회의 이름 또는 ID 검색',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    DropdownButton<String>(
-                      value: '모든 회의',
-                      items: <String>['모든 회의', '내 회의', '공유 회의']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {},
-                    ),
-                    const SizedBox(width: 16),
-                    DropdownButton<String>(
-                      value: '7월 7, 2025 - 8월 6, 2025',
-                      items: <String>['7월 7, 2025 - 8월 6, 2025', '이번 달', '지난 달']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {},
-                    ),
-                    const SizedBox(width: 16),
-                    DropdownButton<String>(
-                      value: '참가자',
-                      items: <String>['참가자', '나', '다른 사람']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {},
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    _buildDocumentItem(
-                      date: '7월 29, 화',
-                      title: '철희님의 Zoom 회의',
-                      time: '20:23 - 20:42',
-                      participants: ['assets/profile_pic1.png', 'assets/profile_pic2.png'],
-                      memo: '메모가 있습니다.',
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(icon: const Icon(Icons.delete_outline), onPressed: () {}),
-                        IconButton(icon: const Icon(Icons.folder_open_outlined), onPressed: () {}),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        IconButton(icon: const Icon(Icons.help_outline), onPressed: () {}),
-                        IconButton(icon: const Icon(Icons.more_horiz), onPressed: () {}),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildDocumentItem({
-    required String date,
-    required String title,
-    required String time,
-    required List<String> participants,
-    String? memo,
-  }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      elevation: 0.5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '문서',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            decoration: InputDecoration(
+              hintText: '문서 검색',
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              filled: true,
+              fillColor: Colors.grey[100],
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              date,
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        time,
-                        style: const TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      if (memo != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          memo,
-                          style: const TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('세부 정보 보기 >', style: TextStyle(color: Colors.blue)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                ...participants.map((img) => Padding(
-                  padding: const EdgeInsets.only(right: 4.0),
-                  child: CircleAvatar(
-                    radius: 12,
-                    backgroundImage: AssetImage(img),
-                  ),
-                )).toList(),
-                const SizedBox(width: 8),
-                Text(
-                  '호스트: 현진',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ],
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          _buildChip('전체', true),
+          const SizedBox(width: 8),
+          _buildChip('최근', false),
+          const SizedBox(width: 8),
+          _buildChip('공유됨', false),
+          const SizedBox(width: 8),
+          _buildChip('즐겨찾기', false),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, bool isSelected) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue[50] : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? Colors.blue : Colors.grey[300]!,
         ),
       ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.blue[700] : Colors.grey[700],
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentList() {
+    final List<Map<String, dynamic>> documents = [
+      {
+        'title': '2025 캡스톤 프로젝트 기획안.pdf',
+        'date': '2025-11-28',
+        'size': '2.4 MB',
+        'icon': Icons.picture_as_pdf,
+        'color': Colors.red,
+      },
+      {
+        'title': 'UI/UX 디자인 가이드.pptx',
+        'date': '2025-11-25',
+        'size': '15.8 MB',
+        'icon': Icons.slideshow,
+        'color': Colors.orange,
+      },
+      {
+        'title': '회의록_20251120.docx',
+        'date': '2025-11-20',
+        'size': '45 KB',
+        'icon': Icons.description,
+        'color': Colors.blue,
+      },
+      {
+        'title': 'backend_api_specs.json',
+        'date': '2025-11-15',
+        'size': '12 KB',
+        'icon': Icons.code,
+        'color': Colors.green,
+      },
+      {
+        'title': '팀 예산안.xlsx',
+        'date': '2025-11-10',
+        'size': '1.2 MB',
+        'icon': Icons.table_chart,
+        'color': Colors.green[700],
+      },
+    ];
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      itemCount: documents.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final doc = documents[index];
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: (doc['color'] as Color).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(doc['icon'], color: doc['color'], size: 28),
+          ),
+          title: Text(
+            doc['title'],
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '${doc['date']} • ${doc['size']}',
+              style: TextStyle(color: Colors.grey[500], fontSize: 13),
+            ),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.grey),
+            onPressed: () {},
+          ),
+          onTap: () {},
+        );
+      },
     );
   }
 }

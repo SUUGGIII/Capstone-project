@@ -13,6 +13,8 @@ import 'package:meeting_app/pages/friends_page.dart';
 import 'package:meeting_app/pages/more_page.dart';
 import 'package:meeting_app/pages/Rooms/create_room.dart';
 import 'package:meeting_app/pages/profile_page.dart';
+import 'package:meeting_app/pages/settings_page.dart';
+import 'package:meeting_app/pages/notifications_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -78,7 +80,12 @@ class HomePage extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.notifications_none, color: Colors.grey),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NotificationsPage()),
+                      );
+                    },
                     tooltip: '알림',
                   ),
                   Positioned(
@@ -116,7 +123,12 @@ class HomePage extends StatelessWidget {
               const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.settings, color: Colors.grey),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsPage()),
+                  );
+                },
                 tooltip: '설정',
               ),
               const SizedBox(width: 8),
