@@ -157,29 +157,10 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildSocialLoginButton(
-                    'Naver',
-                    Icons.vpn_key,
-                    onPressed: () => handleSocialLogin("naver"),
-                  ),
-                  _buildSocialLoginButton(
                     'Google',
                     Icons.g_mobiledata,
                     onPressed: () => handleSocialLogin("google"),
                   ),
-                  _buildSocialLoginButton(
-                    'Apple',
-                    Icons.apple,
-                    onPressed: () {},
-                  ),
-                  _buildSocialLoginButton(
-                    'Facebook',
-                    Icons.facebook,
-                    onPressed: () {},
-                  ),
-                  _buildSocialLoginButton(
-                    'Microsoft',
-                    Icons.business,
-                    onPressed: () {},),
                 ],
               ),
               const SizedBox(height: 40),
