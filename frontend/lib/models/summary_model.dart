@@ -363,24 +363,21 @@ class ProgressItem {
 }
 
 class DecisionMakingDetails {
-  final String decisionTopic;
-  final List<String> optionsConsidered;
-  final String finalDecision;
-  final String rationale;
+  final String decisionBackground;
+  final List<String> discussedAlternatives;
+  final List<String> votingResults;
 
   DecisionMakingDetails({
-    required this.decisionTopic,
-    required this.optionsConsidered,
-    required this.finalDecision,
-    required this.rationale,
+    required this.decisionBackground,
+    required this.discussedAlternatives,
+    required this.votingResults,
   });
 
   factory DecisionMakingDetails.fromJson(Map<String, dynamic> json) {
     return DecisionMakingDetails(
-      decisionTopic: json['decision_topic'] ?? '',
-      optionsConsidered: _toList(json['options_considered']),
-      finalDecision: json['final_decision'] ?? '',
-      rationale: json['rationale'] ?? '',
+      decisionBackground: json['decision_background'] ?? '',
+      discussedAlternatives: _toList(json['discussed_alternatives']),
+      votingResults: _toList(json['voting_results']),
     );
   }
 }

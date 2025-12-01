@@ -610,10 +610,10 @@ class _TopicCardState extends State<_TopicCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionText("결정 주제", details.decisionTopic),
-        _buildSectionList("고려된 옵션", details.optionsConsidered),
-        _buildSectionText("최종 결정", details.finalDecision),
-        _buildSectionText("결정 근거", details.rationale),
+        _buildSectionText("결정 배경", details.decisionBackground),
+        _buildSectionList("논의된 대안", details.discussedAlternatives),
+        if (details.votingResults.isNotEmpty)
+          _buildSectionList("투표 결과", details.votingResults),
       ],
     );
   }
