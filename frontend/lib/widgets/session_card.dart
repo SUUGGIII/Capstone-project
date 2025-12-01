@@ -4,6 +4,7 @@ import '../services/user_store.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../pages/summarize_page.dart';
+import '../pages/vote_results_page.dart';
 
 class SessionCard extends StatefulWidget {
   final int sessionId;
@@ -146,36 +147,58 @@ class _SessionCardState extends State<SessionCard> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: _isGenerating ? null : _handleRecapButton,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[50],
-                      foregroundColor: Colors.blue,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      disabledBackgroundColor: Colors.blue[50],
-                      disabledForegroundColor: Colors.blue,
-                    ),
-                    child: _isGenerating
-                        ? const SizedBox(
-                            width: 60,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 12,
-                                  height: 12,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Text("생성중..", style: TextStyle(fontSize: 12)),
-                              ],
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VoteResultsPage(sessionName: widget.sessionName),
                             ),
-                          )
-                        : const Text("회의록 보기", style: TextStyle(fontSize: 12)),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple[50],
+                          foregroundColor: Colors.purple,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        child: const Text("투표 결과 보기", style: TextStyle(fontSize: 12)),
+                      ),
+                      const SizedBox(width: 8), // 간격 추가
+                      ElevatedButton(
+                        onPressed: _isGenerating ? null : _handleRecapButton,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[50],
+                          foregroundColor: Colors.blue,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          disabledBackgroundColor: Colors.blue[50],
+                          disabledForegroundColor: Colors.blue,
+                        ),
+                        child: _isGenerating
+                            ? const SizedBox(
+                                width: 60,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text("생성중..", style: TextStyle(fontSize: 12)),
+                                  ],
+                                ),
+                              )
+                            : const Text("회의록 보기", style: TextStyle(fontSize: 12)),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -2,6 +2,7 @@ package com.example.webrtc_signal_server.domain.vote.service;
 
 import com.example.webrtc_signal_server.domain.livekit.service.LiveKitService;
 import com.example.webrtc_signal_server.domain.vote.dto.VoteCastRequest;
+import com.example.webrtc_signal_server.domain.vote.dto.VoteResponse;
 import com.example.webrtc_signal_server.domain.vote.dto.VoteStartRequest;
 import com.example.webrtc_signal_server.domain.vote.entity.Vote;
 import com.example.webrtc_signal_server.domain.vote.entity.VoteResult;
@@ -79,5 +80,35 @@ public class VoteService {
 
         String payloadJson = objectMapper.writeValueAsString(payload);
         liveKitService.sendDataToRoom(vote.getRoomName(), payloadJson);
+    }
+
+    public List<VoteResponse> getVotesByRoom(String roomName) {
+        List<Vote> votes = voteRepository.findAllByRoomName(roomName);
+
+        return votes.stream().map(vote -> {
+            try {
+                List<String> options = objectMapper.readValue(vote.getOptions(), new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
+                
+                Map<String, Long> resultsMap = new HashMap<>();
+                for (String option : options) {
+                    resultsMap.put(option, 0L);
+                }
+
+                List<VoteResult> voteResults = voteResultRepository.findAllByVote_Id(vote.getId());
+                for (VoteResult result : voteResults) {
+                    resultsMap.put(result.getSelectedOption(), resultsMap.getOrDefault(result.getSelectedOption(), 0L) + 1);
+                }
+
+                return new VoteResponse(
+                        vote.getId(),
+                        vote.getRoomName(),
+                        vote.getTopic(),
+                        resultsMap,
+                        vote.getStatus().name()
+                );
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Error parsing vote options", e);
+            }
+        }).collect(Collectors.toList());
     }
 }
