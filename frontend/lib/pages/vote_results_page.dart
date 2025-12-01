@@ -99,7 +99,7 @@ class _VoteResultsPageState extends State<VoteResultsPage> {
   }
 
   Widget _buildVoteCard(VoteResultModel vote) {
-    int totalVotes = vote.results.values.fold(0, (sum, count) => sum + count);
+    int totalVotes = vote.results.values.fold(0, (sum, list) => sum + list.length);
 
     return Card(
       elevation: 3,
@@ -141,24 +141,25 @@ class _VoteResultsPageState extends State<VoteResultsPage> {
             const SizedBox(height: 16),
             ...vote.results.entries.map((entry) {
               final option = entry.key;
-              final count = entry.value;
+              final voters = entry.value;
+              final count = voters.length;
               final percentage = totalVotes > 0 ? count / totalVotes : 0.0;
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(option, style: const TextStyle(fontSize: 14)),
-                        Text("$count표 (${(percentage * 100).toStringAsFixed(1)}%)",
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    ClipRRect(
+              return Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(option, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      Text("$count표 (${(percentage * 100).toStringAsFixed(1)}%)",
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: percentage,
@@ -167,10 +168,30 @@ class _VoteResultsPageState extends State<VoteResultsPage> {
                         minHeight: 8,
                       ),
                     ),
+                  ),
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.only(left: 4, right: 4, bottom: 12),
+                      child: voters.isEmpty
+                          ? const Text("투표자 없음", style: TextStyle(color: Colors.grey, fontSize: 12))
+                          : Wrap(
+                              spacing: 6.0,
+                              runSpacing: 6.0,
+                              children: voters.map((voter) => Chip(
+                                label: Text(voter, style: const TextStyle(fontSize: 11)),
+                                backgroundColor: Colors.grey[100],
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                padding: const EdgeInsets.all(0),
+                                labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                                visualDensity: VisualDensity.compact,
+                              )).toList(),
+                            ),
+                    ),
                   ],
                 ),
               );
-            }), // .toList() removed as spread operator supports Iterable
+            }),
           ],
         ),
       ),

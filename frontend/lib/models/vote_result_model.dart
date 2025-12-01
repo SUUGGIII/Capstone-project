@@ -2,7 +2,7 @@ class VoteResultModel {
   final int id;
   final String roomName;
   final String topic;
-  final Map<String, int> results;
+  final Map<String, List<String>> results;
   final String status;
 
   VoteResultModel({
@@ -18,7 +18,11 @@ class VoteResultModel {
       id: json['id'],
       roomName: json['roomName'],
       topic: json['topic'],
-      results: Map<String, int>.from(json['results']),
+      results: Map<String, List<String>>.from(
+        (json['results'] as Map<String, dynamic>).map(
+          (key, value) => MapEntry(key, List<String>.from(value)),
+        ),
+      ),
       status: json['status'],
     );
   }

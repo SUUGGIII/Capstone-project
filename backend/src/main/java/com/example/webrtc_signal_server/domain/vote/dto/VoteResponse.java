@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -13,6 +14,6 @@ public class VoteResponse {
     private Long id;
     private String roomName;
     private String topic;
-    private Map<String, Long> results;
+    private Map<String, List<String>> results;
     private String status;
 }

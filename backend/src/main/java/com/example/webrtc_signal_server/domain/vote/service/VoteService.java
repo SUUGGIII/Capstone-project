@@ -7,6 +7,8 @@ import com.example.webrtc_signal_server.domain.vote.dto.VoteStartRequest;
 import com.example.webrtc_signal_server.domain.vote.entity.Vote;
 import com.example.webrtc_signal_server.domain.vote.entity.VoteResult;
 import com.example.webrtc_signal_server.domain.vote.repository.VoteRepository;
+import com.example.webrtc_signal_server.domain.user.entity.UserEntity;
+import com.example.webrtc_signal_server.domain.user.repository.UserRepository;
 import com.example.webrtc_signal_server.domain.vote.repository.VoteResultRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +28,7 @@ public class VoteService {
 
     private final VoteRepository voteRepository;
     private final VoteResultRepository voteResultRepository;
+    private final UserRepository userRepository;
     private final LiveKitService liveKitService;
     private final ObjectMapper objectMapper;
 
@@ -89,14 +92,35 @@ public class VoteService {
             try {
                 List<String> options = objectMapper.readValue(vote.getOptions(), new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
                 
-                Map<String, Long> resultsMap = new HashMap<>();
+                Map<String, List<String>> resultsMap = new HashMap<>();
                 for (String option : options) {
-                    resultsMap.put(option, 0L);
+                    resultsMap.put(option, new java.util.ArrayList<>());
                 }
 
                 List<VoteResult> voteResults = voteResultRepository.findAllByVote_Id(vote.getId());
+                
+                // Collect all voter IDs (Convert String to Long)
+                List<Long> voterIds = voteResults.stream()
+                        .map(result -> {
+                            try {
+                                return Long.parseLong(result.getVoterId());
+                            } catch (NumberFormatException e) {
+                                return null;
+                            }
+                        })
+                        .filter(id -> id != null)
+                        .collect(Collectors.toList());
+
+                // Fetch users and map id to nickname
+                List<UserEntity> users = userRepository.findAllById(voterIds);
+                Map<String, String> nicknameMap = users.stream()
+                        .collect(Collectors.toMap(user -> String.valueOf(user.getId()), UserEntity::getNickname));
+
                 for (VoteResult result : voteResults) {
-                    resultsMap.put(result.getSelectedOption(), resultsMap.getOrDefault(result.getSelectedOption(), 0L) + 1);
+                    if (resultsMap.containsKey(result.getSelectedOption())) {
+                        String nickname = nicknameMap.getOrDefault(result.getVoterId(), result.getVoterId());
+                        resultsMap.get(result.getSelectedOption()).add(nickname);
+                    }
                 }
 
                 return new VoteResponse(

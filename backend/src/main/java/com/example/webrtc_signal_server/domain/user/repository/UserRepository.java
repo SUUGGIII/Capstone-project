@@ -4,9 +4,12 @@ import com.example.webrtc_signal_server.domain.user.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
+
+    List<UserEntity> findAllByUsernameIn(List<String> usernames);
 
     Boolean existsByUsername(String username);
 
