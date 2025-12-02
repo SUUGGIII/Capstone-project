@@ -72,6 +72,12 @@ public class VoteService {
         Map<String, Long> talliedResults = results.stream()
                 .collect(Collectors.groupingBy(VoteResult::getSelectedOption, Collectors.counting()));
 
+        // Ensure all options are included with 0 count if not present
+        List<String> options = objectMapper.readValue(vote.getOptions(), new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
+        for (String option : options) {
+            talliedResults.putIfAbsent(option, 0L);
+        }
+
         // 2. Broadcast VOTE_ENDED event with results via LiveKit
         Map<String, Object> payload = new HashMap<>();
         payload.put("type", "VOTE_ENDED");
