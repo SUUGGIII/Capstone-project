@@ -302,7 +302,7 @@ class _SummarizePageState extends State<SummarizePage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Action Items (${actionItems.length})",
+              "실행 항목(${actionItems.length})",
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             IconButton(
