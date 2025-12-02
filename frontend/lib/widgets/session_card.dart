@@ -150,24 +150,6 @@ class _SessionCardState extends State<SessionCard> {
                   Row(
                     children: [
                       ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => VoteResultsPage(sessionName: widget.sessionName),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple[50],
-                          foregroundColor: Colors.purple,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        child: const Text("투표 결과 보기", style: TextStyle(fontSize: 12)),
-                      ),
-                      const SizedBox(width: 8), // 간격 추가
-                      ElevatedButton(
                         onPressed: _isGenerating ? null : _handleRecapButton,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue[50],

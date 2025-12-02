@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/summary_model.dart';
+import '../models/vote_result_model.dart';
 
 class SummarizePage extends StatefulWidget {
   final String sessionName;
@@ -22,11 +25,47 @@ class _SummarizePageState extends State<SummarizePage> {
   bool _showParticipants = false;
   bool _showDecisions = true;
   bool _showActionItems = true;
+  bool _showVoteResults = false;
+  late Future<List<VoteResultModel>> _voteResultsFuture;
 
   @override
   void initState() {
     super.initState();
     _parseContent();
+    _voteResultsFuture = _fetchVoteResults();
+  }
+
+  Future<List<VoteResultModel>> _fetchVoteResults() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('accessToken');
+
+    if (accessToken == null) {
+      return []; // 로그인이 안되어있으면 빈 리스트 반환 (혹은 에러 처리)
+    }
+
+    // API 호출. 로컬호스트 가정.
+    final url = Uri.parse('http://localhost:8080/api/votes/room/${widget.sessionName}');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
+        return body.map((e) => VoteResultModel.fromJson(e)).toList();
+      } else {
+        print("Failed to load vote results: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("Error fetching vote results: $e");
+      return [];
+    }
   }
 
   void _parseContent() {
@@ -93,6 +132,8 @@ class _SummarizePageState extends State<SummarizePage> {
               const Divider(height: 32),
               _buildGlobalDecisions(summary.finalSummary.decisions),
             ],
+            const Divider(height: 32),
+            _buildGlobalVoteResults(),
             if (summary.finalSummary.actionItems.isNotEmpty) ...[
               const Divider(height: 32),
               _buildGlobalActionItems(summary.finalSummary.actionItems),
@@ -309,6 +350,145 @@ class _SummarizePageState extends State<SummarizePage> {
               )),
         ],
       ],
+    );
+  }
+
+  Widget _buildGlobalVoteResults() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "투표 결과 보기",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: Icon(
+                  _showVoteResults ? Icons.expand_less : Icons.expand_more),
+              onPressed: () {
+                setState(() {
+                  _showVoteResults = !_showVoteResults;
+                });
+              },
+            ),
+          ],
+        ),
+        if (_showVoteResults)
+          FutureBuilder<List<VoteResultModel>>(
+            future: _voteResultsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                );
+              } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text("진행된 투표가 없습니다.", style: TextStyle(color: Colors.grey)),
+                );
+              }
+
+              return Column(
+                children: snapshot.data!.map((vote) => _buildVoteItem(vote)).toList(),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildVoteItem(VoteResultModel vote) {
+    int totalVotes = vote.results.values.fold(0, (sum, list) => sum + list.length);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  vote.topic,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: vote.status == 'CLOSED' ? Colors.grey[200] : Colors.green[50],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  vote.status == 'CLOSED' ? "종료됨" : "진행중",
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: vote.status == 'CLOSED' ? Colors.grey : Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...vote.results.entries.map((entry) {
+            final option = entry.key;
+            final voters = entry.value;
+            final count = voters.length;
+            final percentage = totalVotes > 0 ? count / totalVotes : 0.0;
+
+            return Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(option, style: const TextStyle(fontSize: 13)),
+                    Text("$count표 (${(percentage * 100).toStringAsFixed(0)}%)",
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: percentage,
+                      backgroundColor: Colors.grey[100],
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                      minHeight: 6,
+                    ),
+                  ),
+                ),
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(left: 4, right: 4, bottom: 8),
+                    child: voters.isEmpty
+                        ? const Text("투표자 없음", style: TextStyle(color: Colors.grey, fontSize: 12))
+                        : Wrap(
+                            spacing: 6.0,
+                            runSpacing: 6.0,
+                            children: voters.map((voter) => Chip(
+                              label: Text(voter, style: const TextStyle(fontSize: 11)),
+                              backgroundColor: Colors.grey[100],
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: const EdgeInsets.all(0),
+                              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                              visualDensity: VisualDensity.compact,
+                            )).toList(),
+                          ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
