@@ -39,7 +39,10 @@ class HomeTabPage extends StatelessWidget {
                   icon: Icons.add_box,
                   label: '참가',
                   color: const Color(0xFF0E71EB),
-                  onPressed: () => Provider.of<NavigationProvider>(context, listen: false).setSelectedIndex(1),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CreateRoomPage()),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 _buildActionButton(

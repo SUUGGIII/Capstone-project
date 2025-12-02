@@ -54,7 +54,7 @@ class HomePage extends StatelessWidget {
                 children: [
                   const SizedBox(width: 8),
                   Text(
-                    'MeetingApp',
+                    'VoTeX',
                     style: TextStyle(
                       color: Theme.of(context).textTheme.titleLarge?.color,
                       fontSize: 18,

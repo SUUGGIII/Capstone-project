@@ -269,12 +269,12 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-        title: const Text('New Meeting Settings'),
+        title: const Text('Join Meeting Room'),
         actions: [
           IconButton(
             icon: Icon(
               _isEmptyWindowMode ? Icons.visibility_off : Icons.visibility,
-              color: Colors.blue,
+              color: Colors.white,
             ),
             onPressed: () {
               setState(() {

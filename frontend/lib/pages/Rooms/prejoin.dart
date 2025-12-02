@@ -51,7 +51,7 @@ class _PreJoinPageState extends State<PreJoinPage> {
   StreamSubscription? _subscription;
 
   bool _busy = false;
-  bool _enableVideo = true;
+  bool _enableVideo = false;
   bool _enableAudio = true;
   LocalAudioTrack? _audioTrack;
   LocalVideoTrack? _videoTrack;

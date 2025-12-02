@@ -47,16 +47,16 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 12),
               Text(
-                'MeetingApp',
+                'VoTeX',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 40,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                '캡스톤디자인 1',
+                '음성 반응형 투표 및 구조화된 회의록',
                 style: TextStyle(
                   fontSize: 14,
                   color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -69,11 +69,6 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
-                    onPressed: () {},
-                    tooltip: '뒤로',
                   ),
                 ),
               ),
