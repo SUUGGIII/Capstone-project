@@ -26,9 +26,18 @@ public class S3Service {
     private String bucket;
 
     public String findLatestRecapFile(String roomName) {
-        String prefix = "Summarize/" + roomName + "_";
-        
-        List<S3ObjectSummary> summaries = amazonS3Client.listObjects(bucket, prefix).getObjectSummaries();
+        // 1. 기본(NFC) 이름으로 검색
+        String prefixNfc = "Summarize/" + roomName + "_";
+        List<S3ObjectSummary> summaries = amazonS3Client.listObjects(bucket, prefixNfc).getObjectSummaries();
+
+        // 2. 없으면 NFD(Mac 방식)로 변환해서 재검색
+        if (summaries.isEmpty()) {
+            String roomNameNfd = java.text.Normalizer.normalize(roomName, java.text.Normalizer.Form.NFD);
+            String prefixNfd = "Summarize/" + roomNameNfd + "_";
+            System.out.println("NFC search failed for " + roomName + ", trying NFD: " + roomNameNfd);
+            
+            summaries = amazonS3Client.listObjects(bucket, prefixNfd).getObjectSummaries();
+        }
         
         if (summaries.isEmpty()) {
             throw new IllegalArgumentException("No recap file found for room: " + roomName);
