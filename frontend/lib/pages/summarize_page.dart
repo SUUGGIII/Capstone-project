@@ -684,8 +684,38 @@ class _TopicCardState extends State<_TopicCard> {
         if (details.keyTakeaways.isNotEmpty)
           _buildSectionList("핵심 요약", details.keyTakeaways),
         if (details.qaSummary.isNotEmpty)
-          _buildSectionList("Q&A", details.qaSummary),
+          _buildQAList("Q&A", details.qaSummary),
       ],
+    );
+  }
+
+  Widget _buildQAList(String title, List<QAPair> qaList) {
+    if (qaList.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          ...qaList.map((qa) => Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Q: ${qa.question}",
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text("A: ${qa.answer}",
+                        style: const TextStyle(fontSize: 14, height: 1.4)),
+                  ],
+                ),
+              )),
+        ],
+      ),
     );
   }
 
@@ -804,9 +834,48 @@ class _TopicCardState extends State<_TopicCard> {
       children: [
         _buildSectionText("주제", details.topic),
         _buildSectionList("생성된 아이디어", details.ideasGenerated),
-        _buildSectionList("주요 테마", details.keyThemes),
+        _buildThemeList("주요 테마", details.keyThemes),
         _buildSectionList("선정된 아이디어", details.selectedIdeas),
       ],
+    );
+  }
+
+  Widget _buildThemeList(String title, List<BrainstormingTheme> themes) {
+    if (themes.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          ...themes.map((theme) => Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("• ${theme.theme}",
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600)),
+                    if (theme.ideas.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12, top: 2),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: theme.ideas
+                              .map((idea) => Text("- $idea",
+                                  style: const TextStyle(
+                                      fontSize: 13, color: Colors.grey)))
+                              .toList(),
+                        ),
+                      ),
+                  ],
+                ),
+              )),
+        ],
+      ),
     );
   }
 

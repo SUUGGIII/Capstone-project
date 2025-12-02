@@ -208,7 +208,7 @@ class Topic {
 class SharedInfoDetails {
   final List<String> presentationSummary;
   final List<String> keyTakeaways;
-  final List<String> qaSummary;
+  final List<QAPair> qaSummary;
 
   SharedInfoDetails({
     required this.presentationSummary,
@@ -220,7 +220,24 @@ class SharedInfoDetails {
     return SharedInfoDetails(
       presentationSummary: _toList(json['presentation_summary']),
       keyTakeaways: _toList(json['key_takeaways']),
-      qaSummary: _toList(json['qa_summary']),
+      qaSummary: (json['qa_summary'] as List?)
+              ?.map((e) => QAPair.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class QAPair {
+  final String question;
+  final String answer;
+
+  QAPair({required this.question, required this.answer});
+
+  factory QAPair.fromJson(Map<String, dynamic> json) {
+    return QAPair(
+      question: json['question'] ?? '',
+      answer: json['answer'] ?? '',
     );
   }
 }
@@ -385,7 +402,7 @@ class DecisionMakingDetails {
 class BrainstormingDetails {
   final String topic;
   final List<String> ideasGenerated;
-  final List<String> keyThemes;
+  final List<BrainstormingTheme> keyThemes;
   final List<String> selectedIdeas;
 
   BrainstormingDetails({
@@ -399,8 +416,25 @@ class BrainstormingDetails {
     return BrainstormingDetails(
       topic: json['topic'] ?? '',
       ideasGenerated: _toList(json['ideas_generated']),
-      keyThemes: _toList(json['key_themes']),
+      keyThemes: (json['key_themes'] as List?)
+              ?.map((e) => BrainstormingTheme.fromJson(e))
+              .toList() ??
+          [],
       selectedIdeas: _toList(json['selected_ideas']),
+    );
+  }
+}
+
+class BrainstormingTheme {
+  final String theme;
+  final List<String> ideas;
+
+  BrainstormingTheme({required this.theme, required this.ideas});
+
+  factory BrainstormingTheme.fromJson(Map<String, dynamic> json) {
+    return BrainstormingTheme(
+      theme: json['theme'] ?? '',
+      ideas: _toList(json['ideas']),
     );
   }
 }
